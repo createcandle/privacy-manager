@@ -3,8 +3,7 @@
   "content_scripts": [
     {
       "css": [
-        "css/extension.css",
-				"css/tail.datetime.css"
+        "css/extension.css"
       ],
       "js": [
         "js/extension.js",

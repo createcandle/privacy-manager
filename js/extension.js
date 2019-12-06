@@ -98,7 +98,7 @@
             
             //var width = +svg.attr("width")
             var width = document.getElementById('extension-privacy-manager-thing-dataviz').offsetWidth;
-            console.log("offsetWidth = " + width);
+            //console.log("offsetWidth = " + width);
             document.getElementById('extension-privacy-manager-thing-dataviz-svg').style.width = width + "px";
             //console.log();
             
@@ -434,7 +434,7 @@
 			
 			// DELETE ALL INTERNAL LOGS
 			document.getElementById('extension-privacy-manager-button-delete-all-logs').addEventListener('click', () => {
-				console.log("clicked delete all internal logs");
+				//console.log("clicked delete all internal logs");
 				this.delete_internal_logs("all");
 			});
 			
@@ -444,7 +444,7 @@
 		
     get_new_date(){
         var fresh_date = new Date(0);
-        console.log(fresh_date);
+        //console.log(fresh_date);
         fresh_date.setFullYear( document.getElementById('extension-privacy-manager-input-year').value );
         fresh_date.setMonth( document.getElementById('extension-privacy-manager-input-month').value );
         fresh_date.setDate( document.getElementById('extension-privacy-manager-input-day').value );
@@ -453,6 +453,7 @@
         fresh_date.setSeconds( document.getElementById('extension-privacy-manager-input-second').value );
         fresh_date.setMilliseconds( document.getElementById('extension-privacy-manager-input-millis').value );
         
+				/*
         console.log(document.getElementById('extension-privacy-manager-input-year').value);
         console.log(document.getElementById('extension-privacy-manager-input-month').value);
         console.log(document.getElementById('extension-privacy-manager-input-day').value);
@@ -462,7 +463,7 @@
         console.log(document.getElementById('extension-privacy-manager-input-millis').value);
         
         console.log("new date stamp: " + fresh_date.valueOf() );
-        
+        */
         return fresh_date.valueOf();
     }
 		
@@ -475,16 +476,16 @@
 			var updating_data_type = document.getElementById('extension-privacy-manager-input-change-data-type').value;
       var old_date_stamp = document.getElementById('extension-privacy-manager-input-change-old-epoch').value;
       var new_date_stamp = this.get_new_date(); // reconnect all the pieces from the dropdowns (and the hidden milliseconds value) into the new date
-      
+      /*
 			console.log("____action = " + action);
       console.log("property = " + updating_property_id);
 			console.log("of type = " + updating_data_type);
       console.log("old_date_stamp = " + old_date_stamp);
 			console.log("new_date_stamp = " + new_date_stamp);
-
+			*/
 			
 			if( action == "create" && old_date_stamp == new_date_stamp ){
-				console.log("Shouldn't make a new point at the same date as the old one.")
+				//console.log("Shouldn't make a new point at the same date as the old one.")
 				pre.innerText = "Please change the date of the new point.";
 				return
 			}
@@ -507,13 +508,14 @@
 		
 		
 		delete_handler(action){
-      console.log("Deleting point(s). Action:");
+      /*
+			console.log("Deleting point(s). Action:");
 			console.log(action);
       //console.log(input_change_date.value);
 			
 			console.log("min-time: " + this.min_time);
 			console.log("min-time: " + this.max_time);
-
+			*/
 			const pre = document.getElementById('extension-privacy-manager-response-data');
 			const options_pane = document.getElementById('extension-privacy-manager-thing-options');
 			//const input_change_value = document.getElementById('extension-privacy-manager-input-change-value');
@@ -536,13 +538,13 @@
 				var start_date_stamp = selected_point_date
 				var end_date_stamp = this.max_time.getTime(); //.toUTCString();
 			}
-			
+			/*
 			console.log("____action = " + action);
       console.log("property = " + updating_property_id);
 			console.log("of type = " + updating_data_type);
       console.log("end_date_stamp = " + end_date_stamp);
       console.log("start_date_stamp = " + start_date_stamp);
-    
+    	*/
 			options_pane.style.opacity = .5;
 			
 		

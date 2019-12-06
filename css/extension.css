@@ -1,0 +1,459 @@
+#extension-privacy-manager-view .clicked{
+	border-left:10px solid white;
+	background-color:rgba(255,255,255,.1);
+}
+
+#extension-privacy-manager-icon{
+  display: inline-block;
+  width: 5rem;
+  height: 2rem;
+  background-image: url('../images/menu-icon.svg');
+  background-size: contain;
+  background-size: 4rem;
+  background-repeat: no-repeat;
+  background-position: 0;
+}
+
+#extension-privacy-manager-icon:hover{
+	background-image: url('../images/menu-icon-open.svg');
+}
+
+
+#extension-privacy-manager-view button{
+	font-size: 1.6rem;
+	padding: 0.5rem 1rem;
+	border: none;
+	border-radius: 0.5rem;
+}
+
+/*  TABS  */
+
+.extension-privacy-manager-tab-buttons{
+	border-bottom:1px solid white;
+	margin-top: 4rem;
+}
+
+#extension-privacy-manager-view .extension-privacy-manager-tab-buttons button{
+	position: relative;
+	top: 1px;
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
+
+#extension-privacy-manager-view .extension-privacy-manager-tab-buttons button.extension-privacy-manager-button-active{
+	color: white;
+	background-color:transparent;
+	border-top: 1px solid	white;
+	border-left: 1px solid white;
+	border-right: 1px solid	white;
+	border-bottom: 1px solid #5d9bc7;
+}
+
+#extension-privacy-manager-view .extension-privacy-manager-tab-buttons button:not(.extension-privacy-manager-button-active){
+	background-color: rgba(0,0,0,.1);
+	color: white;
+}
+
+#extension-privacy-manager-content-container h3{
+	margin-top:3rem;
+}
+
+.zoom {
+  cursor: move;
+  fill: none;
+  pointer-events: all;
+}
+
+.extension-privacy-manager-hidden{
+	display:none;
+}
+
+
+
+
+
+#extension-privacy-manager-view li{
+	padding:1rem;
+	margin-bottom:1rem;
+}
+
+#main-menu #extension-privacy-manager-menu-item {
+  background-image: url('../images/menu-icon.svg');
+}
+
+
+#extension-privacy-manager-view {
+  height: 100%; /*calc(100% - 7.6rem);*/
+  box-sizing: border-box;
+  /*overflow: auto;*/
+	overflow: scroll;
+	position: absolute;
+	top: 7.6rem;
+	left: 0;
+	padding: 2rem;
+}
+
+
+#extension-privacy-manager-content {
+	display:flex;
+	flex-direction: column;
+  /*align-items: center;
+  justify-content: center;*/
+	flex-direction: column;
+	overflow: auto;
+  position: relative;
+  text-align: left;
+  font-size: 1.6rem;
+  color: #fff;
+  /*max-width: 60rem;
+  margin: 0 auto;*/
+	/*width: calc(100% - 6rem);*/
+	height:auto;
+}
+
+#extension-privacy-manager-content-container{
+	height:100%;
+	max-height: 100%;
+}
+
+#extension-privacy-manager-thing-display{
+	/*margin-left: 1rem;
+	padding:1rem;*/
+}
+
+#extension-privacy-manager-content label{
+	min-width: 100px;
+	display: inline-block;
+}
+
+#extension-privacy-manager-content input:invalid{
+	/*border:2px solid red;*/
+}
+
+#extension-privacy-manager-tab-sculptor{
+	width:100%;
+	overflow-x: hidden;
+}
+
+
+
+
+.extension-privacy-manager-inline{
+	display:flex;
+	flex-wrap:wrap;
+	align-items:center;
+	margin-bottom: 1rem;
+}
+
+.extension-privacy-manager-inline-date,
+.extension-privacy-manager-inline-time{
+	justify-content: space-between;
+}
+
+
+.extension-privacy-manager-inline > span {
+	max-width: 50%;
+	display: flex;
+	width: 30%;
+	box-sizing: border-box;
+	align-items: center;
+	justify-content: space-between;
+	background-color: rgba(0,0,0,.05);
+	border-radius: .5rem;
+}
+
+.extension-privacy-manager-inline > span > span{
+	display:inline-block;
+	padding:.2rem;
+	width: 2rem;
+	text-align: center;
+}
+
+.extension-privacy-manager-inline > button{
+	/*max-width: 49%;*/
+
+}
+
+#extension-privacy-manager-options-pane-buttons button{
+	width:100%;
+	flex-grow:1;
+	background-color: #48779a;
+	color: white;
+	margin-bottom: 1.5rem;
+}
+
+
+#extension-privacy-manager-thing-list{
+	margin-top:0;
+	width:100%;
+	list-style: none;
+	padding-left: 0;
+}
+
+#extension-privacy-manager-thing-list li{
+	background-color:rgba(0,0,0,.1);
+	border-right:1rem solid transparent;
+}
+
+#extension-privacy-manager-thing-list li:hover{
+	background-color: rgba(255,255,255,.1);
+}
+
+#extension-privacy-manager-thing-display{
+	/*width:calc(100% - 12rem);*/
+	background-color:rgba(255,255,255,.1);
+	width:100%;
+}
+
+#extension-privacy-manager-thing-dataviz{
+	padding:1rem 0 0 0;
+	overflow: hidden;
+	height:400px;
+}
+
+
+#extension-privacy-manager-thing-dataviz > svg,
+#extension-privacy-manager-thing-dataviz > div{
+	/*border:1px solid red;*/
+}
+
+#extension-privacy-manager-thing-dataviz-svg{
+	/*width:800px;
+	height:500px;*/
+	overflow:visible;
+}
+
+.extension-privacy-manager-line-path{
+	fill:none;
+	stroke:red;
+	stroke-width: 2;
+}
+
+
+
+/*  OPTIONS PANE */
+
+
+
+#extension-privacy-manager-thing-options{
+	padding:2rem;
+	display:none;
+	/*border-top:1px solid white;*/
+	background-color: rgba(0,0,0,.1);
+}
+
+
+#extension-privacy-manager-input-change-value{
+	height:auto;
+	font-size:4rem;
+	padding:1rem;
+	width: 100%;
+	box-sizing: border-box;
+	margin-bottom: 3rem;
+}
+
+
+
+
+/*  BUTTONS */
+#extension-privacy-manager-shutdown,
+#extension-privacy-manager-reboot,
+#extension-privacy-manager-fullscreen-button,
+#extension-privacy-manager-form-submit {
+  font-size: 1.6rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+}
+
+#extension-privacy-manager-shutdown:hover,
+#extension-privacy-manager-reboot:hover,
+#extension-privacy-manager-fullscreen-button:hover,
+#extension-privacy-manager-form-submit:hover{
+	background-color: LightGreen;
+}
+
+
+.extension-privacy-manager-checkbox-container{
+	text-align:left;
+	width:100px;
+	display: inline-block;
+	margin-top:1rem;
+}
+
+
+#extension-privacy-manager-form-browser-time-button{
+	margin-left:100px;
+}
+
+
+#extension-privacy-manager-form-ntp{
+	-moz-transform: scale(1.50);
+  -webkit-transform: scale(1.50);
+  -o-transform: scale(1.50);
+  transform: scale(1.50);
+	margin-right: .5rem;
+	margin-top: 1.5rem;
+}
+
+
+#extension-privacy-manager-content .control-label{
+	font-size: 1.5rem;
+	font-weight: bold;
+	margin-bottom: 0.5rem;
+	margin-top:1rem;
+}
+
+
+#extension-privacy-manager-content .field-description{
+	margin-top: .5rem;
+	font-size: 1.5rem;
+	margin-bottom: 0.5rem;
+	padding-left: 100px;
+}
+
+
+#extension-privacy-manager-picker select{
+	padding: 1rem 1rem 1rem 1rem;
+  font-size: 2rem;
+  text-align: center;
+	background-color: #d2d9de;
+	margin-right: .2rem;
+	border: none;
+	flex-grow: 1;
+	border-radius: .5rem;
+}
+
+
+#extension-privacy-manager-response{
+	padding: 2rem;
+	background-color: rgba(255,0,0,.9);
+	border-radius: .5rem;
+	opacity:0;
+}
+
+
+
+
+
+/*
+
+INTERNAL LOGS
+
+*/
+
+
+.extension-privacy-manager-deletable_item{
+	background-color:rgba(255,255,255,.1);
+	border-radius:.5rem;
+}
+
+.extension-privacy-manager-deletable_item:hover{
+	background-color:red;
+	cursor: pointer;
+}
+.extension-privacy-manager-deletable_item::before{
+	content: " X ";
+	color:white;
+	padding: .7rem .4rem .3rem .8rem;
+	background-color:	red;
+	border-radius: 1.5rem;
+	margin-right: 1rem;
+	margin-top: .2rem;
+	display: inline-block;
+	padding: .7rem .8rem .4rem .9rem;
+	font-size: 1rem;
+	font-weight: bold;
+}
+.extension-privacy-manager-deletable_item:hover::before{
+	color:red;
+	background-color:	white;
+}
+
+
+#extension-privacy-manager-button-delete-all-logs{
+	margin-top:2rem;
+	cursor:pointer;
+}
+#extension-privacy-manager-button-delete-all-logs:hover{
+	background-color:red;
+}
+
+
+
+
+
+
+
+
+
+
+
+@media screen and (min-width: 801px) {
+	#extension-privacy-manager-view{
+		left:9.6rem;
+		top: 0;
+		height:100vh; 
+		position:absolute;
+		width: calc(100% - 7.6rem);
+	}
+	
+	.extension-privacy-manager-inline-date{
+		margin-right:3rem;
+	}
+	
+	#extension-privacy-manager-content{
+		
+	}	
+	
+	#extension-privacy-manager-content-container{
+		height:auto;
+		width: calc(100% - 3rem);
+	}
+	
+	/*
+	.extension-privacy-manager-tab{
+		width: calc(100% - 12rem);
+	}
+	*/
+	
+	#extension-privacy-manager-data-sculptor{
+		/*border:1px solid white;
+		padding:1rem;*/
+		display:flex;
+		/*flex-wrap:wrap;*/
+	}	
+	
+	#extension-privacy-manager-thing-left{
+		width:12rem;
+		min-width:300px;
+	}
+	
+	.extension-privacy-manager-inline{
+		display:inline-block;
+	}
+	
+	#extension-privacy-manager-input-change-value{
+		width:20rem;
+	}
+	
+	.extension-privacy-manager-inline > span{
+		display:inline;
+		background-color: transparent;
+	}
+	
+	.extension-privacy-manager-inline > button{
+		margin-right:4rem;
+	}
+	
+	#extension-privacy-manager-options-pane-buttons button{
+		width:auto;
+	}
+	
+	#extension-privacy-manager-response{
+		width: calc(100% - 22rem);
+	}
+	
+}

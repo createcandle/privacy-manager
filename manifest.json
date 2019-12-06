@@ -1,0 +1,54 @@
+{
+  "author": "Candle",
+  "content_scripts": [
+    {
+      "css": [
+        "css/extension.css",
+				"css/tail.datetime.css"
+      ],
+      "js": [
+        "js/extension.js",
+				"js/d3.min.js"
+      ]
+    }
+  ],
+  "description": "Manage and sculpt your data",
+  "gateway_specific_settings": {
+    "webthings": {
+      "exec": "python3 {path}/main.py",
+      "primary_type": "extension",
+      "strict_max_version": "*",
+      "strict_min_version": "0.10.0"
+    }
+  },
+  "homepage_url": "https://github.com/createcandle/privacy-manager",
+  "id": "privacy-manager",
+  "license": "MPL-2.0",
+  "manifest_version": 1,
+  "name": "Privacy Manager",
+  "options": {
+    "default": {
+      "Debugging": false
+    },
+    "schema": {
+      "properties": {
+        "Debugging": {
+          "description": "Debugging allows you to diagnose any issues with the add-on. If enabled it will result in a lot more debug data in the internal log (which can be found under Settings -> Developer -> View internal logs).",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "Debugging"
+      ],
+      "type": "object"
+    }
+  },	
+  "short_name": "Privacy",
+  "version": "0.0.1",
+  "web_accessible_resources": [
+    "css/*.css",
+    "images/*.svg",
+    "js/*.js",
+    "views/*.html"
+  ]
+}

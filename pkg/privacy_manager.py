@@ -615,7 +615,7 @@ class PrivacyManagerAPIHandler(APIHandler):
         
             # Secondly, we send a list of (remaining) existing files.
             for fname in os.listdir(self.log_dir_path):
-                if fname.startswith("run-app.log") and fname != "run-app.log"::
+                if fname.startswith("run-app.log") and fname != "run-app.log":
                     result.append(fname)
                         
                         

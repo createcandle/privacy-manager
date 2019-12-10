@@ -597,7 +597,8 @@
 				
 				var textnode = document.createTextNode( file_list[key] );         // Create a text node
 				node.onclick = function() { 
-					this_object.delete_internal_logs( file_list[key] ) 
+					//this_object.delete_internal_logs( file_list[key] )
+					this_object.delete_internal_logs( this.getAttribute("data-filename") );
 				};
 				node.appendChild(textnode); 
 				

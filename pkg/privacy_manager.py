@@ -17,11 +17,13 @@ try:
     #print("succesfully loaded APIHandler and APIResponse from gateway_addon")
 except:
     print("Import APIHandler and APIResponse from gateway_addon failed. Use at least WebThings Gateway version 0.10")
-
+    sys.exit(1)
+    
 try:
-    from gateway_addon import Adapter, Device, Database
+    from gateway_addon import Database
 except:
     print("Gateway not loaded?!")
+    sys.exit(1)
 
 print = functools.partial(print, flush=True)
 
@@ -93,7 +95,7 @@ class PrivacyManagerAPIHandler(APIHandler):
 
     # Read the settings from the add-on settings page
     def add_from_config(self):
-        """Attempt to add all configured devices."""
+        """Attempt to read config data."""
         try:
             database = Database('privacy-manager')
             if not database.open():
@@ -315,7 +317,6 @@ class PrivacyManagerAPIHandler(APIHandler):
             print("Getting the initialisation data")
         
         try:
-            db = sqlite3.connect(':memory:')
             db = sqlite3.connect(self.log_db_path)
         except Exception as e:
             print("Error opening log file: " + str(e))
@@ -391,7 +392,6 @@ class PrivacyManagerAPIHandler(APIHandler):
             return "error"
         
         try:
-            db = sqlite3.connect(':memory:')
             db = sqlite3.connect(self.log_db_path)
         except Exception as e:
             print("Error opening log database: " + str(e))
@@ -463,7 +463,6 @@ class PrivacyManagerAPIHandler(APIHandler):
             print("of type " + str(data_type))
         
         try:
-            db = sqlite3.connect(':memory:')
             db = sqlite3.connect(self.log_db_path)
         except Exception as e:
             print("Error opening log file: " + str(e))
@@ -543,7 +542,6 @@ class PrivacyManagerAPIHandler(APIHandler):
             print("of data_type " + str(data_type))
         
         try:
-            db = sqlite3.connect(':memory:')
             db = sqlite3.connect(self.log_db_path)
         except Exception as e:
             print("Error opening log file: " + str(e))
@@ -596,7 +594,7 @@ class PrivacyManagerAPIHandler(APIHandler):
             # First we delete what needs to be deleted.
             if action == "delete":
                 for fname in os.listdir(self.log_dir_path):
-                    if fname.startswith("run-app.log"):
+                    if fname.startswith("run-app.log") and fname != "run-app.log":
                         if filename == "all":
                             try:
                                 os.remove(os.path.join(self.log_dir_path, fname))
@@ -617,7 +615,7 @@ class PrivacyManagerAPIHandler(APIHandler):
         
             # Secondly, we send a list of (remaining) existing files.
             for fname in os.listdir(self.log_dir_path):
-                if fname.startswith("run-app.log"):
+                if fname.startswith("run-app.log") and fname != "run-app.log"::
                     result.append(fname)
                         
                         
@@ -631,21 +629,3 @@ class PrivacyManagerAPIHandler(APIHandler):
         if self.DEBUG:
             print("Shutting down")
 
-
-
-
-def run_command(cmd, timeout_seconds=60):
-    try:
-        
-        p = subprocess.run(cmd, timeout=timeout_seconds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, universal_newlines=True)
-
-        if p.returncode == 0:
-            return p.stdout  + '\n' + "Command success" #.decode('utf-8')
-            #yield("Command success")
-        else:
-            if p.stderr:
-                return "Error: " + str(p.stderr)  + '\n' + "Command failed"   #.decode('utf-8'))
-
-    except Exception as e:
-        print("Error running Arduino CLI command: "  + str(e))
-        

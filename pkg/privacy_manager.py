@@ -1,16 +1,16 @@
 """Power Settings API handler."""
 
 
-import functools
-import json
 import os
-#from os import listdir
-#from os.path import isfile, join
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
+import json
 from time import sleep
-import datetime
-import subprocess
 import sqlite3
 import requests
+import datetime
+import functools
+import subprocess
 
 try:
     from gateway_addon import APIHandler, APIResponse
@@ -28,23 +28,34 @@ except:
 print = functools.partial(print, flush=True)
 
 
+
+_TIMEOUT = 3
+
+_CONFIG_PATHS = [
+    os.path.join(os.path.expanduser('~'), '.webthings', 'config'),
+]
+
+if 'WEBTHINGS_HOME' in os.environ:
+    _CONFIG_PATHS.insert(0, os.path.join(os.environ['WEBTHINGS_HOME'], 'config'))
+
+
+
 class PrivacyManagerAPIHandler(APIHandler):
     """Power settings API handler."""
 
     def __init__(self, verbose=False):
         """Initialize the object."""
         #print("INSIDE API HANDLER INIT")
-        
-        
-        
 
+        self.addon_name = 'privacy-manager'
         self.server = 'http://127.0.0.1:8080'
-        self.DEV = True
+        self.DEV = False
         self.DEBUG = False
             
         self.things = [] # Holds all the things, updated via the API. Used to display a nicer thing name instead of the technical internal ID.
         self.data_types_lookup_table = {}
-            
+        
+        
         try:
             manifest_fname = os.path.join(
                 os.path.dirname(__file__),
@@ -73,8 +84,9 @@ class PrivacyManagerAPIHandler(APIHandler):
             print("Failed to init UX extension API handler: " + str(e))
         
         try:
-            self.addon_path = os.path.join(os.path.expanduser('~'), '.mozilla-iot', 'addons', 'privacy-manager')
-            self.log_dir_path = os.path.join(os.path.expanduser('~'), '.mozilla-iot', 'log')
+            #self.addon_path = os.path.join(os.path.expanduser('~'), '.webthings', 'addons', 'privacy-manager')
+            self.addon_path =  os.path.join(self.user_profile['addonsDir'], self.addon_name)
+            self.log_dir_path = os.path.join(self.user_profile['baseDir'], 'log')
             self.log_db_path = os.path.join(self.log_dir_path, 'logs.sqlite3')
             
         except Exception as e:

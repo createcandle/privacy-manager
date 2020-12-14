@@ -24,6 +24,9 @@
         .then((res) => res.text())
         .then((text) => {
           this.content = text;
+		  if( document.location.href.endsWith("privacy-manager") ){
+		  	this.show();
+		  }
         })
         .catch((e) => console.error('Failed to fetch content:', e));
     }

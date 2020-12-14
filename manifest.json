@@ -1,5 +1,5 @@
 {
-  "author": "Candle",
+  "author": "CreateCandle",
   "content_scripts": [
     {
       "css": [
@@ -43,7 +43,7 @@
     }
   },	
   "short_name": "Privacy",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",

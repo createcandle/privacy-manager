@@ -1,3 +1,12 @@
+#extension-privacy-manager-content h3,
+#extension-privacy-manager-content h4{
+    margin-top:4rem;
+}
+
+#extension-privacy-manager-content .extension-privacy-manager-vlak h4:first-of-type{
+    margin-top:2rem;
+}
+
 #extension-privacy-manager-view .clicked{
 	border-left:10px solid white;
 	background-color:rgba(255,255,255,.1);
@@ -18,16 +27,25 @@
 	background-image: url('../images/menu-icon-open.svg');
 }
 
-
 #extension-privacy-manager-view button{
-	font-size: 1.6rem;
-	padding: 0.5rem 1rem;
+    font-size: 1.6rem;
+	padding: .5rem 1rem;
 	border: none;
-	border-radius: 0.5rem;
+    border-radius:.5rem;
 }
+
+#extension-privacy-manager-view #extension-privacy-manager-tab-buttons-container button{
+	font-size: 1.8rem;
+	padding: 1rem 2rem;
+	border: none;
+    border-radius:0;
+}
+
+
 
 /*  TABS  */
 
+/*
 .extension-privacy-manager-tab-buttons{
 	border-bottom:1px solid white;
 	margin-top: 4rem;
@@ -49,11 +67,13 @@
 	border-right: 1px solid	white;
 	border-bottom: 1px solid #5d9bc7;
 }
+*/
 
 #extension-privacy-manager-view .extension-privacy-manager-tab-buttons button:not(.extension-privacy-manager-button-active){
 	background-color: rgba(0,0,0,.1);
 	color: white;
 }
+
 
 #extension-privacy-manager-content-container h3{
 	margin-top:3rem;
@@ -71,11 +91,141 @@
 
 
 
+/*  TABS  */
+
+.extension-privacy-manager-tab-buttons{
+	margin-top: 4rem;
+	background-color: rgba(255,255,255,.1);
+	border-radius: .7rem;
+	overflow: hidden;
+	font-size:0;
+}
+
+#extension-privacy-manager-view .extension-privacy-manager-tab-buttons button{
+	background-color: transparent;
+	border-right: 1px solid rgba(0,0,0,.05);
+	color: #eee;
+	cursor:pointer;
+	font-size:1.8rem;
+}
+#extension-privacy-manager-view .extension-privacy-manager-tab-buttons button:last-child{
+	float:right;
+}
+
+#extension-privacy-manager-view .extension-privacy-manager-tab-buttons button:hover{
+	background-color: rgba(0,0,0,0.1);
+	color:white;
+}
+
+
+
+/*  VLAKKEN  */
+
+.extension-privacy-manager-centered-page{
+    padding: 2rem;
+    max-width: 60rem;
+    margin: 4rem auto;
+}
+
+.extension-privacy-manager-flex-align-right{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+}
+
+.extension-privacy-manager-vlak{
+    background-color:rgba(0,0,0,.1);
+    border-radius:.5rem;
+    margin:1rem 0;
+    padding:2rem;
+}
+
+
+
+
+/*
+#extension-privacy-manager-tabs-container > div{
+	display:none;
+}
+*/
+.extension-privacy-manager-tab{
+    display:none;
+}
+
+.extension-privacy-manager-main-tab-button{
+    background:none;
+}
+
+
+#extension-privacy-manager-content.extension-privacy-manager-active-tab-beauty-filters #extension-privacy-manager-tab-beauty-filters,
+#extension-privacy-manager-content.extension-privacy-manager-active-tab-data-sculptor #extension-privacy-manager-tab-data-sculptor,
+#extension-privacy-manager-content.extension-privacy-manager-active-tab-internal-logs #extension-privacy-manager-tab-internal-logs,
+#extension-privacy-manager-content.extension-privacy-manager-active-tab-print #extension-privacy-manager-tab-print,
+#extension-privacy-manager-content.extension-privacy-manager-active-tab-help #extension-privacy-manager-tab-help{
+    display:block;
+}
+
+
+#extension-privacy-manager-content.extension-privacy-manager-active-tab-beauty-filters #extension-privacy-manager-tab-button-beauty-filters,
+#extension-privacy-manager-content.extension-privacy-manager-active-tab-data-sculptor #extension-privacy-manager-tab-button-data-sculptor,
+#extension-privacy-manager-content.extension-privacy-manager-active-tab-internal-logs #extension-privacy-manager-tab-button-internal-logs,
+#extension-privacy-manager-content.extension-privacy-manager-active-tab-print #extension-privacy-manager-tab-button-print,
+#extension-privacy-manager-content.extension-privacy-manager-active-tab-help #extension-privacy-manager--buttontab-help{
+    background-color: rgba(0,0,0,0.18);
+    color:white;
+}
+
+
+/*
+#extension-privacy-manager-content.extension-privacy-manager-show-tab-timers #extension-privacy-manager-tab-button-timers,
+#extension-privacy-manager-content.extension-privacy-manager-show-tab-satellites #extension-privacy-manager-tab-button-satellites,
+#extension-privacy-manager-content.extension-privacy-manager-show-tab-tutorial #extension-privacy-manager-tab-button-tutorial{
+	color: white;
+    background-color: rgba(0,0,0,0.18);
+}
+#extension-privacy-manager-content.extension-privacy-manager-show-tab-timers #extension-privacy-manager-tab-timers,
+#extension-privacy-manager-content.extension-privacy-manager-show-tab-satellites #extension-privacy-manager-tab-satellites,
+#extension-privacy-manager-content.extension-privacy-manager-show-tab-tutorial #extension-privacy-manager-tab-tutorial{
+	display:block;
+}
+*/
+
+
+
+
+
+/*  PRINTER  */
+
+#extension-privacy-manager-print-test-progress,
+#extension-privacy-manager-print-busy-scanning,
+#extension-privacy-manager-printer-list{
+    display:flex;
+    justify-content:space-between;
+    padding:1rem;
+    background-color:rgba(0,0,0,.1);
+    border-radius:.5rem;
+    margin: 2rem 0;
+    
+}
+
+#extension-privacy-manager-print-busy-scanning{
+    text-align:center;
+}
+
+.extension-privacy-manager-printer-list-name{
+    font-weight:bold;
+}
+
+#extension-privacy-manager-print-test-button,
+#extension-privacy-manager-start-bluetooth-scan-button{
+    margin-left:1rem;
+}
 
 
 #extension-privacy-manager-view li{
 	padding:1rem;
 	margin-bottom:1rem;
+	list-style: none;
 }
 
 #main-menu #extension-privacy-manager-menu-item {
@@ -194,6 +344,7 @@
 #extension-privacy-manager-thing-list li{
 	background-color:rgba(0,0,0,.1);
 	border-right:1rem solid transparent;
+    cursor:pointer;
 }
 
 #extension-privacy-manager-thing-list li:hover{

@@ -7,7 +7,7 @@
       ],
       "js": [
         "js/extension.js",
-				"js/d3.min.js"
+        "js/d3.min.js"
       ]
     }
   ],
@@ -43,7 +43,7 @@
     }
   },	
   "short_name": "Privacy",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",

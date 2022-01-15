@@ -12,6 +12,11 @@
 	background-color:rgba(255,255,255,.1);
 }
 
+#extension-privacy-manager-view .localization-select{
+    margin-left:0;
+}
+
+
 #extension-privacy-manager-icon{
   display: inline-block;
   width: 5rem;
@@ -32,6 +37,11 @@
 	padding: .5rem 1rem;
 	border: none;
     border-radius:.5rem;
+    cursor:pointer;
+    opacity:.9;
+}
+#extension-privacy-manager-view button:hover{
+    opacity:1;
 }
 
 #extension-privacy-manager-view #extension-privacy-manager-tab-buttons-container button{
@@ -39,6 +49,7 @@
 	padding: 1rem 2rem;
 	border: none;
     border-radius:0;
+    color:inherit;
 }
 
 
@@ -71,7 +82,7 @@
 
 #extension-privacy-manager-view .extension-privacy-manager-tab-buttons button:not(.extension-privacy-manager-button-active){
 	background-color: rgba(0,0,0,.1);
-	color: white;
+	/*color: white;*/
 }
 
 
@@ -104,7 +115,7 @@
 #extension-privacy-manager-view .extension-privacy-manager-tab-buttons button{
 	background-color: transparent;
 	border-right: 1px solid rgba(0,0,0,.05);
-	color: #eee;
+	/*color: #eee;*/
 	cursor:pointer;
 	font-size:1.8rem;
 }
@@ -172,7 +183,7 @@
 #extension-privacy-manager-content.extension-privacy-manager-active-tab-print #extension-privacy-manager-tab-button-print,
 #extension-privacy-manager-content.extension-privacy-manager-active-tab-help #extension-privacy-manager--buttontab-help{
     background-color: rgba(0,0,0,0.18);
-    color:white;
+    color:inherit;
 }
 
 
@@ -196,6 +207,16 @@
 
 /*  PRINTER  */
 
+#extension-privacy-manager-printer-connected{
+    display:inline-block;
+    padding: 0 .5rem;
+    background-color:rgba(0,0,0,.5);
+    border-radius:1rem;
+    margin-right:1rem;
+}
+
+
+
 #extension-privacy-manager-print-test-progress,
 #extension-privacy-manager-print-busy-scanning,
 #extension-privacy-manager-printer-list{
@@ -212,8 +233,9 @@
     text-align:center;
 }
 
-.extension-privacy-manager-printer-list-name{
+#extension-privacy-manager-printer-list-name{
     font-weight:bold;
+    text-transform:capitalize;
 }
 
 #extension-privacy-manager-print-test-button,
@@ -221,6 +243,28 @@
     margin-left:1rem;
 }
 
+
+#extension-privacy-manager-print-settings-saved,
+#extension-privacy-manager-print-settings-saved-error{
+    padding: 1rem;
+    margin-top: 2rem;
+    text-align: center;
+    border-radius: 0.5rem;
+}
+
+#extension-privacy-manager-print-settings-saved{
+    background: green;
+}
+#extension-privacy-manager-print-settings-saved-error{
+    background: red;
+}
+
+
+
+
+
+
+/*  General  */
 
 #extension-privacy-manager-view li{
 	padding:1rem;
@@ -248,16 +292,16 @@
 #extension-privacy-manager-content {
 	display:flex;
 	flex-direction: column;
-  /*align-items: center;
-  justify-content: center;*/
+    /*align-items: center;
+    justify-content: center;*/
 	flex-direction: column;
 	overflow: auto;
-  position: relative;
-  text-align: left;
-  font-size: 1.6rem;
-  color: #fff;
-  /*max-width: 60rem;
-  margin: 0 auto;*/
+    position: relative;
+    text-align: left;
+    font-size: 1.6rem;
+  
+    /*max-width: 60rem;
+    margin: 0 auto;*/
 	/*width: calc(100% - 6rem);*/
 	height:auto;
 }
@@ -328,8 +372,7 @@
 #extension-privacy-manager-options-pane-buttons button{
 	width:100%;
 	flex-grow:1;
-	background-color: #48779a;
-	color: white;
+	background-color: rgba(0,0,0,.2);
 	margin-bottom: 1.5rem;
 }
 
@@ -383,7 +426,7 @@
 
 
 
-/*  OPTIONS PANE */
+/*  OPTIONS PANEL */
 
 
 
@@ -408,6 +451,7 @@
 
 
 /*  BUTTONS */
+
 #extension-privacy-manager-shutdown,
 #extension-privacy-manager-reboot,
 #extension-privacy-manager-fullscreen-button,
@@ -442,9 +486,9 @@
 
 #extension-privacy-manager-form-ntp{
 	-moz-transform: scale(1.50);
-  -webkit-transform: scale(1.50);
-  -o-transform: scale(1.50);
-  transform: scale(1.50);
+    -webkit-transform: scale(1.50);
+    -o-transform: scale(1.50);
+    transform: scale(1.50);
 	margin-right: .5rem;
 	margin-top: 1.5rem;
 }
@@ -468,8 +512,8 @@
 
 #extension-privacy-manager-picker select{
 	padding: 1rem 1rem 1rem 1rem;
-  font-size: 2rem;
-  text-align: center;
+    font-size: 2rem;
+    text-align: center;
 	background-color: #d2d9de;
 	margin-right: .2rem;
 	border: none;
@@ -538,7 +582,14 @@ INTERNAL LOGS
 
 
 
-
+#extension-privacy-manager-debug-warning{
+    max-width:60rem;
+    margin:2rem auto;
+    padding:2rem;
+    background-color:red;
+    color:white;
+    border-radius:.5rem;
+}
 
 
 

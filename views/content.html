@@ -37,7 +37,7 @@
                     <h3>Data sculptor</h3>
                     <div id="extension-privacy-manager-data-sculptor">
                         <div id="extension-privacy-manager-thing-left">
-                            <ul id="extension-privacy-manager-thing-list"></ul>
+                            <ul id="extension-privacy-manager-thing-list">Loading...</ul>
                         </div>
                         <div id="extension-privacy-manager-thing-display">
                             <div id="extension-privacy-manager-thing-dataviz">
@@ -66,18 +66,18 @@
                                             <span>
                                                 <select id="extension-privacy-manager-input-month" class="extension-privacy-manager-input-date-dropdown" style="width: auto;">
                                                     <option value=""></option>
-                                                    <option value="1">01</option>
-                                                    <option value="2">02</option>
-                                                    <option value="3">03</option>
-                                                    <option value="4">04</option>
-                                                    <option value="5">05</option>
-                                                    <option value="6">06</option>
-                                                    <option value="7">07</option>
-                                                    <option value="8">08</option>
-                                                    <option value="9">09</option>
-                                                    <option value="10">10</option>
-                                                    <option value="11">11</option>
-                                                    <option value="12">12</option>
+                                                    <option value="0">Januari</option>
+                                                    <option value="1">Februari</option>
+                                                    <option value="2">March</option>
+                                                    <option value="3">April</option>
+                                                    <option value="4">May</option>
+                                                    <option value="5">June</option>
+                                                    <option value="6">July</option>
+                                                    <option value="7">August</option>
+                                                    <option value="8">September</option>
+                                                    <option value="9">October</option>
+                                                    <option value="10">November</option>
+                                                    <option value="11">December</option>
                                                 </select><span>M</span>
                                             </span>
                                             <span>
@@ -303,9 +303,11 @@
               </div>
 
         
-              <div id="extension-privacy-manager-tab-internal-logs" class="extension-privacy-manager-tab">
+              <div id="extension-privacy-manager-tab-internal-logs" class="extension-privacy-manager-tab extension-privacy-manager-centered-page">
                     <h3>Internal logs</h3>
                     <div id="extension-privacy-manager-logs-list"></div>
+                    <p>The internal logs can be automatically deleted every hour.</p>
+                    <input type="checkbox" id="extension-privacy-manager-delete-internal-logs-checkbox" name="extension-privacy-manager-delete-internal-logs-checkbox"/><label for="extension-privacy-manager-delete-internal-logs-checkbox">Automatically delete</label><br/>
                     <button type="button" id="extension-privacy-manager-button-delete-all-logs">Delete all internal logs</button>
               </div>
 
@@ -320,13 +322,12 @@
                     <h3>Step 1: Connect a printer</h3>
                     <div class="extension-privacy-manager-vlak">
                         <p>If you have scanned for a printer and found it, it's details will be shown below. If no printer has been found yet, click on the scan button to initiate a Bluetooth scan. Make sure the printer is on and ready to connect before you start a scan.</p>
-                        <div id="extension-privacy-manager-printer-list"><span id="extension-privacy-manager-printer-list-name">?</span> <span id="extension-privacy-manager-printer-list-mac">?</span></div>
+                        <div id="extension-privacy-manager-printer-list"><span><span id="extension-privacy-manager-printer-connected"></span><span id="extension-privacy-manager-printer-list-name"></span></span> <span id="extension-privacy-manager-printer-list-mac"></span></div>
                         <div id="extension-privacy-manager-print-busy-scanning" style="display:none">Scanning for PeriPage Printer...</div>
                         <div id="extension-privacy-manager-print-test-progress" style="display:none">Trying to connect to the printer...</div>
                     
                         <div class="extension-privacy-manager-flex-align-right">
-
-                            <button type="button" class="btn" id="extension-privacy-manager-print-test-button" style="display:none">Test printer</button>
+                            <button type="button" class="btn" id="extension-privacy-manager-print-test-button" style="display:none">Test connection</button>
                             <button type="button" class="btn" id="extension-privacy-manager-start-bluetooth-scan-button">Bluetooth scan</button>
                         </div>
                     </div>
@@ -338,9 +339,9 @@
                         <h4>Log to print</h4>
                         <p>Which log should be printed to paper?</p>
                         <div id="extension-privacy-manager-printer-log-dropdown-container">
-                            <select id="extension-privacy-manager-printer-log-dropdown">
+                            <!--<select id="extension-privacy-manager-printer-log-dropdown" class="localization-select">
                                 <option value="none">None</option>
-                            </select>
+                            </select>--><div class="localization-select" style="padding: 0.8rem 0 0 1rem;height: 3rem">Loading...</div>
                         </div>
                     
                     
@@ -350,40 +351,44 @@
                             <select id="extension-privacy-manager-printer-interval-dropdown" class="localization-select">
                                 <option value="none">Disabled</option>
                                 <option value="hourly">On the hour</option>
+                                <option value="3hourly">Every 3 hours</option>
+                                <option value="6hourly">Every 6 hours</option>
+                                <option value="12hourly">Every 12 hours</option>
                                 <option value="daily">At midnight</option>
                                 <option value="weekly">Sunday at midnight</option>
                             </select>
                         </div>
                     
                         <h4>Print rotation</h4>
-                        <p>You can rotate the image before it's printed. Using 270 degrees is recommended, but will use more paper.</p>
+                        <p>You can rotate the image before it's printed. Using 270 degrees looks great, but will use more paper. If you set it to automatic, it will switch between no rotation and 270 degrees depending on how much data there is to print.</p>
+                        <p>Be advised: if you have set the log to be printed at a rotation of 270 degrees, and if you have a large amount of collected data, then the print may be quite long.</p>
                         <div id="extension-privacy-manager-printer-log-dropdown-container">
                             <select id="extension-privacy-manager-printer-rotation-dropdown" class="localization-select">
                                 <option value="0">No rotation</option>
                                 <option value="90">90 degrees</option>
                                 <option value="180">180 degrees</option>
                                 <option value="270">270 degrees</option>
+                                <option value="auto">Automatic</option>
                             </select>
                         </div>
                         
                         <div class="extension-privacy-manager-flex-align-right">
                             <button type="button" class="btn" id="extension-privacy-manager-set-print-button">Save settings</button>
                         </div>
+                        <div id="extension-privacy-manager-print-settings-saved" style="display:none">Settings were saved</div>
+                        <div id="extension-privacy-manager-print-settings-saved-error" style="display:none">Connection error, could not save settings</div>
                     </div>
                     
                     <div id="extension-privacy-manager-clean-slate-container" style="display:none">
-                        <h3>Step 3: Paper backup</h3>
+                        <h3>Print now</h3>
                         <div class="extension-privacy-manager-vlak">
                             <p>Currently the log called <span id="extension-privacy-manager-selected-log-to-print" style="font-style:italic">...</span> is set to have it's data always printed, and then deleted, at regular intervals.</p>
-                            <p>However, you may wish to print ALL the <span style="font-style:italic">existing</span> data for this log.</p>
-                            <p>Be advised: if you have set the log to be printed at a rotation of 270 degrees, and if you have a large amount of collected data, then the print may be quite long.</p>
+                            <p>However, you may wish to print all the <span style="font-style:italic">existing</span> data for this log now.</p>
                             <div class="extension-privacy-manager-flex-align-right">
-                                <button type="button" class="btn" id="extension-privacy-manager-print-now-button">Print existing data</button>
+                                <button type="button" class="btn" id="extension-privacy-manager-print-now-button">Print now</button>
                             </div>
                         </div>
                     </div>
-                    
-                    
                     
               </div>
 
@@ -391,12 +396,28 @@
               <div id="extension-privacy-manager-tab-help" class="extension-privacy-manager-tab">
                     <h3>Help</h3>
                     <p>This addon showcases a numer of privacy innovations that were conceptualised within the Candle Smart Home project. It's goal is to explore how we may protect privacy better, and improve and safeguard people's trust in smart systems.</p>
+                    <h4>Beauty filters</h4>
+                    <p>People use filter on their social media posts to remove things like wrinkles in their skin. If other people are getting to see your data, you may wish to massage it to look a little more socially acceptible too. That's what this section is for: experimenting with making your data "look good". This is useful because in some situations we're seen smart homes being used to surveil, shame or control people, sometimes even without their knowing.</p>
+                    <h4>Data sculptor</h4>
+                    <p>Think of this as a precise scalpel to manipulate your data. You can remove, modify or even create data points. This is useful if, for example, you are planning a surprise birthday party and don't want your partner to figure out that you've been preparing.</p>
+                    <h4>Internal Logs</h4>
+                    <p>The control keeps internal logs of everything that happens in the system. Viewing these can give insight into behaviour, even if the other privacy protecting options are used. That's why you can delete the internal logs here.</p>
                     <h4>Print</h4>
-                    <p>By connecting a little Bluetoth printer, you can make sure that your sensor data isn't even stored on the smart home controller anymore. The data is turned into a paper trail, giving a new level of control over your data by making the data tangible. With a paper printout you can be sure there is only one copy, and it's very easy to dispose of that copy.</p><p>If you were, for example, collecting data about sexual activity, then this option might be very valuable.</p>
+                    <p>By connecting a little Bluetooth printer, you can make sure that your sensor data isn't even stored on the smart home controller anymore. The data is turned into a paper trail, giving a new level of control over your data by making the data tangible. With a paper printout you can be sure there is only one copy, and it's very easy to dispose of that copy.</p><p>If you were, for example, collecting data about health or sexual activity, then this option might be very valuable.</p>
               </div>
           
 
         </div>
+        
+        <br/>
+        <br/>
+        
+        <div id="extension-privacy-manager-debug-warning" style="display:none">
+            <h2>Debugging is enabled</h2>
+            <p>This addon is currently set to save detailed information about its operation in the internal logs. This may impact your privacy, as this also means that insights into your behaviour might be stored in those logs.</p>
+            <p>You can disable debugging mode by going to <span style="font-style:italic">Settings</span>, then <span style="font-style:italic">Addons</span>, and then clicking on the <span style="font-style:italic">Settings</span> button for the <span style="font-style:italic">Privacy Manager</span> addon. There you can uncheck the debugging option and click <span style="font-style:italic">Apply</span>.
+        </div>
+        
         <div id="extension-privacy-manager-response">
             <p id="extension-privacy-manager-response-data"></p>
         </div>

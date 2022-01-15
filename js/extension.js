@@ -11,13 +11,6 @@
             this.min_time = new Date().getTime(); // Can only go down from here
             this.max_time = new Date(0); // Can only go up from here
 
-            API.getThings().then((things) => {
-                for (let key in things) {
-                    var thing_id = things[key]['href'].substr(things[key]['href'].lastIndexOf('/') + 1);
-                    this.thing_title_lookup_table[thing_id] = things[key]['title'];
-                }
-            });
-
             var latest_property_id = 4;
 
             fetch(`/extensions/${this.id}/views/content.html`)
@@ -33,14 +26,14 @@
 
 
         create_thing_list(logs_list) {
-            console.log("Creating main thing list");
+            //console.log("Creating main thing list");
 
             const pre = document.getElementById('extension-privacy-manager-response-data');
             const thing_list = document.getElementById('extension-privacy-manager-thing-list');
             thing_list.innerHTML = "";
 
             for (var key in logs_list) {
-                console.log(key);
+                //console.log(key);
                 var dataline = JSON.parse(logs_list[key]['name']);
                 //console.log(Object.keys(dataline));
 
@@ -50,11 +43,19 @@
                 var node = document.createElement("LI"); // Create a <li> node
                 node.setAttribute("data-property-id", logs_list[key]['id']);
                 node.setAttribute("data-data-type", logs_list[key]['data_type']);
+                
+                /*
                 var human_readable_thing_title = dataline['thing'];
                 if (human_readable_thing_title in this.thing_title_lookup_table) {
                     human_readable_thing_title = this.thing_title_lookup_table[human_readable_thing_title];
                 }
-                var textnode = document.createTextNode(human_readable_thing_title + ' - ' + dataline['property']); // Create a text node
+                */
+                
+                const nice_name = this.get_thing_and_property_string(dataline['thing'],dataline['property']);
+                console.log("nice name: " + nice_name);
+                var textnode = document.createTextNode( nice_name ); // Create a text node
+                
+                
                 node.onclick = function() {
                     this_object.thing_list_click(this)
                 };
@@ -67,8 +68,10 @@
 
 
         display_thing_data(property_id, data_type, raw_data) { // Uses json to generate dataviz
+            console.log("in display_thing_data. property_id: " + property_id);
             const dataviz = document.getElementById('extension-privacy-manager-thing-dataviz');
-            dataviz.innerHTML = "";
+            console.log("dataviz:",dataviz);
+            //dataviz.innerHTML = "";
             
             var data = []
 
@@ -224,6 +227,7 @@
                 .attr("data-property-id", property_id)
                 .attr("data-data-type", data_type);
 
+
             // Points mouse events
             points_g.selectAll("circle")
                 .on("mouseover", function(d) {
@@ -263,7 +267,9 @@
                     document.getElementById('extension-privacy-manager-input-minute').value = select.getMinutes(); //select.toLocaleDateString("en-UK",{minute: '2-digit'});
                     document.getElementById('extension-privacy-manager-input-hour').value = select.getHours();
                     document.getElementById('extension-privacy-manager-input-day').value = select.getDate();
-                    document.getElementById('extension-privacy-manager-input-month').value = select.getMonth();
+                    console.log("select.getDate() = ", select.getDate() );
+                    console.log("select.getMonth() = ", select.getMonth() );
+                    document.getElementById('extension-privacy-manager-input-month').value = select.getMonth() + 1;
                     document.getElementById('extension-privacy-manager-input-year').value = select.getFullYear();
                     document.getElementById('extension-privacy-manager-input-millis').value = select.getMilliseconds();
                 })
@@ -303,25 +309,6 @@
 
 
 
-        // HELPER METHODS
-
-        hasClass(ele, cls) {
-            //console.log(ele);
-            //console.log(cls);
-            return !!ele.className.match(new RegExp('(\\s|^)' + cls + '(\\s|$)'));
-        }
-
-        addClass(ele, cls) {
-            if (!this.hasClass(ele, cls)) ele.className += " " + cls;
-        }
-
-        removeClass(ele, cls) {
-            if (this.hasClass(ele, cls)) {
-                var reg = new RegExp('(\\s|^)' + cls + '(\\s|$)');
-                ele.className = ele.className.replace(reg, ' ');
-            }
-        }
-
 
         thing_list_click(the_target) {
             const pre = document.getElementById('extension-privacy-manager-response-data');
@@ -335,7 +322,7 @@
 
             var target_property_id = the_target.getAttribute('data-property-id');
             var target_data_type = the_target.getAttribute('data-data-type');
-            //console.log(target_data_type);
+            console.log(target_data_type);
             document.getElementById('extension-privacy-manager-input-change-data-type').value = target_data_type; // Make sure this is always populated with the correct data type. Bit of a clumsy use of hidden fields, should improve later.
             //console.log(target_thing_id);
 
@@ -346,16 +333,22 @@
                     'data_type': target_data_type
                 }
             ).then((body) => {
+                console.log(body);
                 this.display_thing_data(target_property_id, target_data_type, body['data']);
                 //pre.innerText = JSON.stringify(body, null, 2);
                 //pre.innerText = body['state'];
             }).catch((e) => {
-                console.log("Privacy manager: error getting property data");
+                console.log("Privacy manager: error getting property data: " + e);
                 pre.innerText = e.toString();
             });
 
         }
 
+
+
+        //
+        // SHOW
+        //
 
         show() {
             if (this.content == '') {
@@ -365,6 +358,11 @@
             }
 
             const pre = document.getElementById('extension-privacy-manager-response-data');
+
+            // Beauty filters
+            const quick_delete_button = document.getElementById('extension-privacy-manager-quick-delete-button');
+            
+            // Data sculptor
             const thing_list = document.getElementById('extension-privacy-manager-thing-list');
             const dataviz = document.getElementById('extension-privacy-manager-thing-dataviz');
 
@@ -390,14 +388,50 @@
             const input_change_property_id = document.getElementById('extension-privacy-manager-input-change-property-id');
             const input_change_data_type = document.getElementById('extension-privacy-manager-input-change-data-type');
 
-            const quick_delete_button = document.getElementById('extension-privacy-manager-quick-delete-button');
+            // Internal logs
+            const internal_logs_auto_delete_checkbox = document.getElementById('extension-privacy-manager-delete-internal-logs-checkbox');
             
+            // Print
             const bluetooth_scan_button = document.getElementById('extension-privacy-manager-start-bluetooth-scan-button');
 
             pre.innerText = "";
 
 
-
+            
+            API.getThings().then((things) => {
+                for (let key in things) {
+                    //console.log("lookup device source: ", things[key]);
+                    
+                    var thing_id = things[key]['href'].substr(things[key]['href'].lastIndexOf('/') + 1);
+                    this.thing_title_lookup_table[thing_id] = {'title':things[key]['title'], 'properties':{} };
+                    
+                    for (let property_name in things[key].properties ) {
+                        //console.log("property_name?: ", property_name);
+                        //console.log(things[key].properties[property_name]);
+                        
+                        //things[key].properties[property_name].name
+                        //things[key].properties[property_name].title
+                        
+                        this.thing_title_lookup_table[thing_id].properties[property_name] = things[key].properties[property_name].title;
+                        
+                    }
+                }
+                console.log("complete things lookup table: ", this.thing_title_lookup_table);
+            });
+            /*
+    	    API.getThings().then((things) => {
+		        console.log("all things: ");
+                console.log(things);
+                
+                
+                //console.log("this.all_things: ", this.all_things);
+                //console.log("this.title_lookup_table: ", this.title_lookup_table);
+                
+                //this.request_devices_list();
+            });
+            */
+            
+            
             // TABS
 
             document.getElementById('extension-privacy-manager-tab-buttons-container').addEventListener('click', (event) => {
@@ -417,23 +451,6 @@
                 console.log("showing print tab and calling printer_init");
                 //this.scan_for_printer();
                 this.show_printer_state();
-                /*
-                window.API.postJson(
-                    `/extensions/${this.id}/api/printer_init` //,{'init':1}
-
-                ).then((body) => {
-                    console.log(body);
-                    //thing_list.innerText = body['data'];
-                    //this.create_thing_list(body['logs']);
-                    //this.create_printer_ui(body);
-
-                }).catch((e) => {
-                    //pre.innerText = e.toString();
-                    console.log("Privacy manager: error in show function");
-                    console.log(e.toString());
-                });
-                */
-                
             });
             /*
             
@@ -448,33 +465,17 @@
                 this.removeClass(tab_quick, "extension-privacy-manager-hidden");
             });
             */
-            // Data sculptor
-            tab_button_sculptor.addEventListener('click', () => {
-                /*
-                this.addClass(tab_button_sculptor, "extension-privacy-manager-button-active");
-                this.removeClass(tab_button_internal, "extension-privacy-manager-button-active");
-                this.removeClass(tab_button_quick, "extension-privacy-manager-button-active");
-
-                this.addClass(tab_internal, "extension-privacy-manager-hidden");
-                this.addClass(tab_quick, "extension-privacy-manager-hidden");
-                this.removeClass(tab_sculptor, "extension-privacy-manager-hidden");
-                */
-                
+            
+            
+            // Data sculptor tab
+            tab_button_sculptor.addEventListener('click', () => {                
                 this.init_data_sculptor();
-                
             });
+            
             
             // Internal logs tab
             tab_button_internal.addEventListener('click', () => {
-                /*
-                this.addClass(tab_button_internal, "extension-privacy-manager-button-active");
-                this.removeClass(tab_button_sculptor, "extension-privacy-manager-button-active");
-                this.removeClass(tab_button_quick, "extension-privacy-manager-button-active");
-                
-                this.addClass(tab_sculptor, "extension-privacy-manager-hidden");
-                this.addClass(tab_quick, "extension-privacy-manager-hidden");
-                this.removeClass(tab_internal, "extension-privacy-manager-hidden");
-                */
+
                 window.API.postJson(
                     `/extensions/${this.id}/api/internal_logs`, {
                         'action': 'get',
@@ -494,25 +495,22 @@
             });
             
             
-            // QUICK DELETE
+            // BEAUTY FILTERS
             
             // Quick delete button
             quick_delete_button.addEventListener('click', () => {
-                console.log("quick delete button pressed");
-                //this.addClass(tab_button_internal, "extension-privacy-manager-button-active");
-                //this.removeClass(tab_button_sculptor, "extension-privacy-manager-button-active");
+                const duration = document.getElementById("extension-privacy-manager-quick-delete-time-dropdown").value;
+                console.log("quick delete button pressed. duration: " + duration);
                 
-                //this.addClass(tab_sculptor, "extension-privacy-manager-hidden");
-                //this.removeClass(tab_internal, "extension-privacy-manager-hidden");
 
                 window.API.postJson(
                     `/extensions/${this.id}/api/ajax`, {
                         'action': 'quick_delete',
-                        'duration': 30
+                        'duration': duration
                     }
 
                 ).then((body) => {
-                    console.log("ajax API was called succcesfully");
+                    console.log("quick delete ajax API was called succcesfully");
                     //thing_list.innerText = body['data'];
                     //this.show_internal_logs(body['data']);
 
@@ -542,6 +540,9 @@
             // printer test button
             document.getElementById('extension-privacy-manager-print-test-button').addEventListener('click', (target) => {
                 console.log("printer test button clicked");
+                
+                document.getElementById('extension-privacy-manager-printer-connected').innerText = '?';
+                
                 document.getElementById('extension-privacy-manager-print-test-button').style.display = 'none';
                 document.getElementById('extension-privacy-manager-print-test-progress').style.display = 'block';
                 window.API.postJson(
@@ -549,18 +550,25 @@
 
                 ).then((body) => {
                     console.log(body);
-                    if(body.print_result == false){
-                        alert("Could not connect to printer. Try turning it on and off again, each time by pressing the button for two seconds.")
+                    if(body.printer_connected == false){
+                        alert("Could not connect to printer. Try turning it on and off again.");
                     }
                     else{
-                        console.log("test print was succesful");
+                        console.log("Printer connection test was succesful");
+                        //alert("Printer is connected");
                     }
+                    
+                    if(typeof body.printer_connected != 'undefined'){
+                        this.show_printer_connection_state(body.printer_connected);
+                    }
+                    
                     document.getElementById('extension-privacy-manager-print-test-progress').style.display = 'none';
                     document.getElementById('extension-privacy-manager-print-test-button').style.display = 'block';
                 }).catch((e) => {
                     console.log("Privacy manager: error in print test: ", e);
                     document.getElementById('extension-privacy-manager-print-test-progress').style.display = 'none';
                     document.getElementById('extension-privacy-manager-print-test-button').style.display = 'block';
+                    this.show_printer_connection_state(false);
                 });
             });
             
@@ -575,7 +583,13 @@
                         console.log(body);
                         
                         if(body.print_result.state == 'error'){
-                            alert("Could not connect to printer. Try turning it on and off again, each time by pressing the button for two seconds.")
+                            if(typeof body.print_result.message != 'undefined'){
+                                alert("Error: " + body.print_result.message);
+                            }
+                            else{
+                                alert("Could not print. Perhaps the printer is not connected, or there is no data to print?")
+                            }
+                            
                         }
                         else{
                             console.log("test print was succesful");
@@ -626,22 +640,40 @@
 
 
 
-            // Get list of properties for sculptor
-            /*
+            // Get initial data
+            
             window.API.postJson(
                 `/extensions/${this.id}/api/init` //,{'init':1}
 
             ).then((body) => {
-                console.log(body);
+                console.log("Privacy manager init data: ", body);
                 //thing_list.innerText = body['data'];
                 //this.create_thing_list(body['logs']);
+                
+                if(typeof body.debug != 'undefined'){
+                    if(body.debug){
+                        document.getElementById('extension-privacy-manager-debug-warning').style.display = 'block';
+                    }
+                }
+                
+                if(typeof body.internal_logs_auto_delete != 'undefined'){
+                    //console.log("setting auto-delete internal logs preference to: " + body.internal_logs_auto_delete);
+                    //console.log(internal_logs_auto_delete_checkbox.checked);
+                    internal_logs_auto_delete_checkbox.checked = Boolean(body.internal_logs_auto_delete);
+                    
+                    internal_logs_auto_delete_checkbox.addEventListener('change', (event) => {
+                        //console.log("changed delete internal logs checkbox state");
+                        this.internal_logs_auto_delete(event.target.checked);
+                    });
+                }
+                
 
             }).catch((e) => {
                 //pre.innerText = e.toString();
                 console.log("Privacy manager: error in show function");
                 console.log(e.toString());
             });
-            */
+            
 
 
 
@@ -656,11 +688,18 @@
                 //console.log("clicked delete all internal logs");
                 this.delete_internal_logs("all");
             });
-
+            
+            
 
         }
 
 
+
+		hide(){
+			//console.log("in hide");
+			//clearInterval(window.zigbee2mqtt_interval);
+			this.view.innerHTML = "";
+		}
 
 
 
@@ -835,33 +874,37 @@
 
 
         show_internal_logs(file_list) {
+            try{
+                const pre = document.getElementById('extension-privacy-manager-response-data');
+                const logs_list = document.getElementById('extension-privacy-manager-logs-list');
 
-            const pre = document.getElementById('extension-privacy-manager-response-data');
-            const logs_list = document.getElementById('extension-privacy-manager-logs-list');
+                file_list.sort();
+                //console.log(file_list)
 
-            file_list.sort();
-            //console.log(file_list)
+                logs_list.innerHTML = "";
 
-            logs_list.innerHTML = "";
+                for (var key in file_list) {
 
-            for (var key in file_list) {
+                    var this_object = this;
 
-                var this_object = this;
+                    var node = document.createElement("LI"); // Create a <li> node
+                    node.setAttribute("class", "extension-privacy-manager-deletable_item");
+                    node.setAttribute("data-filename", file_list[key]);
 
-                var node = document.createElement("LI"); // Create a <li> node
-                node.setAttribute("class", "extension-privacy-manager-deletable_item");
-                node.setAttribute("data-filename", file_list[key]);
+                    var textnode = document.createTextNode(file_list[key]); // Create a text node
+                    node.onclick = function() {
+                        //this_object.delete_internal_logs( file_list[key] )
+                        this_object.delete_internal_logs(this.getAttribute("data-filename"));
+                    };
+                    node.appendChild(textnode);
 
-                var textnode = document.createTextNode(file_list[key]); // Create a text node
-                node.onclick = function() {
-                    //this_object.delete_internal_logs( file_list[key] )
-                    this_object.delete_internal_logs(this.getAttribute("data-filename"));
-                };
-                node.appendChild(textnode);
-
-                logs_list.appendChild(node);
+                    logs_list.appendChild(node);
+                }
+                pre.innerText = "";
             }
-            pre.innerText = "";
+            catch(e){
+                console.log("Error in show_internal_logs: ", e);
+            }
         }
 
 
@@ -892,6 +935,30 @@
 
 
 
+        internal_logs_auto_delete(choice) {
+            //console.log("Deleting log files. filename:");
+            //console.log(filename);
+
+            //const choice = document.getElementById('extension-privacy-manager-delete-internal-logs-checkbox').checked;
+            //console.log("choice:" + choice);
+
+            window.API.postJson(
+                `/extensions/${this.id}/api/internal_logs`, {
+                    'action': 'auto-delete',
+                    'internal_logs_auto_delete': choice
+                }
+
+            ).then((body) => {
+                //console.log("choice set: ", body);
+                //this.show_internal_logs(body['data']);
+
+            }).catch((e) => {
+                console.log("Privacy manager: error in internal log automatic deletion change handler");
+            });
+
+        } // End of button delete point add listener
+
+
 
 
         //
@@ -899,7 +966,7 @@
         //
 
         scan_for_printer(){
-            console.log("scan_for_printer was called. Calling API for /printer_scan");
+            //console.log("scan_for_printer was called. Calling API for /printer_scan");
             document.getElementById('extension-privacy-manager-print-busy-scanning').style.display = 'block';
             document.getElementById('extension-privacy-manager-start-bluetooth-scan-button').style.display = 'none';
             
@@ -907,7 +974,7 @@
                 `/extensions/${this.id}/api/printer_scan` //,{'init':1}
 
             ).then((body) => {
-                console.log(body);
+                //console.log(body);
                 
                 document.getElementById('extension-privacy-manager-printer-list-name').innerText = body['persistent']['printer_name'];
                 document.getElementById('extension-privacy-manager-printer-list-mac').innerText = body['persistent']['printer_mac'];
@@ -920,8 +987,7 @@
 
             }).catch((e) => {
                 //pre.innerText = e.toString();
-                console.log("Privacy manager: error in show function");
-                console.log(e.toString());
+                console.log("Privacy manager: error in show function: ", e);
                 document.getElementById('extension-privacy-manager-print-busy-scanning').style.display = 'none';
                 document.getElementById('extension-privacy-manager-start-bluetooth-scan-button').style.display = 'block';
             });
@@ -934,7 +1000,16 @@
             //window.setTimeout(this.show_printer_state, 10000);
         }
         */
-
+        show_printer_connection_state(connected){
+            if(connected){
+                document.getElementById('extension-privacy-manager-printer-connected').innerHTML = "⇄";
+                document.getElementById('extension-privacy-manager-printer-connected').style.background = "green";
+            }
+            else{
+                document.getElementById('extension-privacy-manager-printer-connected').innerHTML = "?";
+                document.getElementById('extension-privacy-manager-printer-connected').style.background = "red";
+            }
+        }
 
         show_printer_state(scanning){
             if(typeof scanning != 'undefined'){
@@ -945,21 +1020,26 @@
                 `/extensions/${this.id}/api/printer_init` //,{'init':1}
 
             ).then((body) => {
-                console.log(body);
+                //console.log(body);
                 if(body.scanning){
-                    console.log("still scanning");
+                    console.log("still scanning for a printer");
                 }
                 else{
-                    console.log("not currently scanning");
+                    console.log("not currently scanning for a printer");
                 }
+
+                
                 // if still scanning is true, also call wait_for_printer_state again (and make sure the "still scanning" message is shown)
                 // if scanning is done, just remove the "still scanning" message
                 document.getElementById('extension-privacy-manager-printer-list-name').innerText = body['persistent']['printer_name'];
                 document.getElementById('extension-privacy-manager-printer-list-mac').innerText = body['persistent']['printer_mac'];
                 
                 if(body['persistent']['printer_mac'] != ""){
-                    
                     document.getElementById('extension-privacy-manager-print-test-button').style.display = 'block';
+                    
+                    if(typeof body.printer_connected != 'undefined'){
+                        this.show_printer_connection_state(body.printer_connected);
+                    }
                 }
                 
                 // Clean slate - print everything
@@ -974,7 +1054,7 @@
                 
                 // Interval select correct option
                 if(typeof body['persistent']['printer_interval'] != 'undefined'){
-                    console.log("body['printer_interval'] = " + body['persistent']['printer_interval']);
+                    //console.log("body['printer_interval'] = " + body['persistent']['printer_interval']);
                     var interval_dropdown = document.getElementById('extension-privacy-manager-printer-interval-dropdown');
                     for (var i = 0; i < interval_dropdown.options.length; i++) {
                         if( interval_dropdown.options[i].value === body['persistent']['printer_interval'] ){
@@ -986,12 +1066,12 @@
                 
                 // Rotation set correct option
                 if(typeof body['persistent']['printer_rotation'] != 'undefined'){
-                    console.log("body['printer_rotation'] = " + body['persistent']['printer_rotation']);
+                    //console.log("body['printer_rotation'] = " + body['persistent']['printer_rotation']);
                     var rotation_dropdown = document.getElementById('extension-privacy-manager-printer-rotation-dropdown');
                     for (var i = 0; i < rotation_dropdown.options.length; i++) {
-                        console.log(rotation_dropdown.options[i].value + " =?= " + body['persistent']['printer_rotation']);
+                        //console.log(rotation_dropdown.options[i].value + " =?= " + body['persistent']['printer_rotation']);
                         if( parseInt(rotation_dropdown.options[i].value) === parseInt(body['persistent']['printer_rotation']) ){
-                            console.log("correct rotation spotted");
+                            //console.log("correct rotation spotted");
                             rotation_dropdown.selectedIndex = i;
                             break;
                         }
@@ -1014,6 +1094,7 @@
                 
                 for (var key in logs_list) {
                     //console.log(key);
+                    console.log("logs list: ", logs_list[key]);
                     var dataline = JSON.parse(logs_list[key]['name']);
                     //console.log(Object.keys(dataline));
 
@@ -1023,14 +1104,12 @@
                     //var node = document.createElement("LI"); // Create a <li> node
                     //node.setAttribute("data-property-id", logs_list[key]['id']);
                     //node.setAttribute("data-data-type", logs_list[key]['data_type']);
-                    var human_readable_thing_title = dataline['thing'];
-                    if (human_readable_thing_title in this.thing_title_lookup_table) {
-                        human_readable_thing_title = this.thing_title_lookup_table[human_readable_thing_title] + ' - ' + dataline['property'];
-                    }
-                    //console.log(human_readable_thing_title);
+                    //var human_readable_thing_title = dataline['thing'];
+                    //var human_readable_property_title = dataline['property'];
+                    const nice_title = this.get_thing_and_property_string(dataline['thing'], dataline['property']);
                     
                     
-                    var new_option = new Option(human_readable_thing_title,logs_list[key]['id']);
+                    var new_option = new Option(nice_title,logs_list[key]['id']);
                     if(typeof body['persistent']['printer_log'] != 'undefined'){
                         if( body['persistent']['printer_log'] == logs_list[key]['id'] ){
                             console.log("setting selected log: " + logs_list[key]['id']);
@@ -1073,9 +1152,30 @@
 
 
 
+        get_thing_and_property_string(human_readable_thing_title, human_readable_property_title){
+            
+            if (human_readable_thing_title in this.thing_title_lookup_table) {
+                
+                // try to upgrade the property title
+                try{
+                    human_readable_property_title = this.thing_title_lookup_table[human_readable_thing_title].properties[ human_readable_property_title ];
+                }
+                catch(e){
+                    console.log("error looking up nice property name: ", e);
+                }
+                
+                // Upgrade thing title and append property title
+                human_readable_thing_title = this.thing_title_lookup_table[human_readable_thing_title].title + ' - ' + human_readable_property_title;
+            }
+            console.log("original title after lookup: ", human_readable_thing_title);
+            return human_readable_thing_title;
+            //console.log(human_readable_thing_title);
+        }
 
+
+        // Save print settings
         set_print(){
-            console.log('in set_print');
+            //console.log('in set_print');
             
             const selected_log_element = document.getElementById("extension-privacy-manager-log-to-print");
             var printer_log = selected_log_element.options[selected_log_element.selectedIndex].value;
@@ -1087,13 +1187,13 @@
             const selected_rotation_element = document.getElementById("extension-privacy-manager-printer-rotation-dropdown");
             var printer_rotation = selected_rotation_element.options[selected_rotation_element.selectedIndex].value;
             
-            
+            document.getElementById('extension-privacy-manager-print-settings-saved').style.display = 'block';
             
             window.API.postJson(
                 `/extensions/${this.id}/api/printer_set`,{'printer_log':printer_log, 'printer_interval':printer_interval, 'printer_log_name':printer_log_name, 'printer_rotation':printer_rotation}
 
             ).then((body) => {
-                console.log(body);
+                //console.log(body);
                 
                 document.getElementById('extension-privacy-manager-printer-list-name').innerText = body['persistent']['printer_name'];
                 document.getElementById('extension-privacy-manager-printer-list-mac').innerText = body['persistent']['printer_mac'];
@@ -1101,19 +1201,51 @@
                 //thing_list.innerText = body['data'];
                 //this.create_thing_list(body['logs']);
                 //this.create_printer_ui(body, true);
-                document.getElementById('extension-privacy-manager-print-busy-scanning').style.display = 'none';
-                document.getElementById('extension-privacy-manager-start-bluetooth-scan-button').style.display = 'block';
+                //document.getElementById('extension-privacy-manager-print-busy-scanning').style.display = 'none';
+                //document.getElementById('extension-privacy-manager-start-bluetooth-scan-button').style.display = 'block';
+                
+                document.getElementById('extension-privacy-manager-print-settings-saved').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('extension-privacy-manager-print-settings-saved').style.display = 'none';
+                }, 2000);
 
             }).catch((e) => {
                 //pre.innerText = e.toString();
-                console.log("Privacy manager: error in show function");
-                console.log(e.toString());
-                document.getElementById('extension-privacy-manager-print-busy-scanning').style.display = 'none';
-                document.getElementById('extension-privacy-manager-start-bluetooth-scan-button').style.display = 'block';
+                console.log("Privacy manager: error while saving print settings: ", e);
+                //document.getElementById('extension-privacy-manager-print-busy-scanning').style.display = 'none';
+                //document.getElementById('extension-privacy-manager-start-bluetooth-scan-button').style.display = 'block';
+                
+                document.getElementById('extension-privacy-manager-print-settings-saved-error').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('extension-privacy-manager-print-settings-saved-error').style.display = 'none';
+                }, 3000);
             });
             
         }
 
+
+
+
+
+
+        // HELPER METHODS
+
+        hasClass(ele, cls) {
+            //console.log(ele);
+            //console.log(cls);
+            return !!ele.className.match(new RegExp('(\\s|^)' + cls + '(\\s|$)'));
+        }
+
+        addClass(ele, cls) {
+            if (!this.hasClass(ele, cls)) ele.className += " " + cls;
+        }
+
+        removeClass(ele, cls) {
+            if (this.hasClass(ele, cls)) {
+                var reg = new RegExp('(\\s|^)' + cls + '(\\s|$)');
+                ele.className = ele.className.replace(reg, ' ');
+            }
+        }
 
 
     }

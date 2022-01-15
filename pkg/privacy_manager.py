@@ -7,7 +7,8 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
 import json
 import ppa6
-import time
+#import time
+import time as time_module
 #from time import sleep
 #from datetime import datetime, timedelta
 import pygal
@@ -16,7 +17,7 @@ import sqlite3
 import requests
 import threading
 #import datetime
-from datetime import datetime 
+from datetime import time,date,datetime,timedelta,timezone
 #from datetime import date
 import functools
 import subprocess
@@ -28,17 +29,13 @@ except:
     print("Error: could not load Pillow library. Printing will not be possible.")
 
 try:
-    from gateway_addon import APIHandler, APIResponse
+    from gateway_addon import Database, APIHandler, APIResponse
     #print("succesfully loaded APIHandler and APIResponse from gateway_addon")
 except:
-    print("Import APIHandler and APIResponse from gateway_addon failed. Use at least WebThings Gateway version 0.10")
+    print("Could not load vital libraries to interact with the controller, exiting.")
     sys.exit(1)
     
-try:
-    from gateway_addon import Database
-except:
-    print("Gateway not loaded?!")
-    sys.exit(1)
+from .privacy_manager_adapter import *
 
 print = functools.partial(print, flush=True)
 
@@ -70,10 +67,14 @@ class PrivacyManagerAPIHandler(APIHandler):
         self.things = [] # Holds all the things, updated via the API. Used to display a nicer thing name instead of the technical internal ID.
         self.data_types_lookup_table = {}
         
-        self.doing_bluetooth_scan = False;
+        self.doing_bluetooth_scan = False
         self.printer = None
+        self.printer_connected = False
         self.do_not_delete_after_printing = False
+        self.should_print_log_name = False
         
+        
+        #print(str( time(11, 59, 59) ))
         
         try:
             manifest_fname = os.path.join(
@@ -122,7 +123,7 @@ class PrivacyManagerAPIHandler(APIHandler):
             print("self.gateway_version did not exist")
         
         
-        self.persistent_data = {'printer_mac':'', 'printer_name':''}
+        self.persistent_data = {'printer_mac':'', 'printer_name':'','internal_logs_auto_delete':False}
         
         # Get persistent data
         try:
@@ -139,6 +140,9 @@ class PrivacyManagerAPIHandler(APIHandler):
                     self.persistent_data['printer_name'] = ''
                     self.save_persistent_data()
 
+                if 'internal_logs_auto_delete' not in self.persistent_data:
+                    self.persistent_data['internal_logs_auto_delete'] = False
+
         except:
             print("Could not load persistent data (if you just installed the add-on then this is normal)")
             self.save_persistent_data()
@@ -146,7 +150,15 @@ class PrivacyManagerAPIHandler(APIHandler):
         self.get_logs_list()
         
         self.connect_to_printer()
-
+        
+        try:
+            self.adapter = PrivacyManagerAdapter(self,verbose=False)
+            #self.manager_proxy.add_api_handler(self.extension)
+            print("ADAPTER created")
+            pass
+        except Exception as ex:
+            print("Failed to start ADAPTER. Error: " + str(ex))
+        
         self.running = True
         
         try:
@@ -163,54 +175,106 @@ class PrivacyManagerAPIHandler(APIHandler):
         
         
         #while(self.running):
-        #    time.sleep(1)
+        #    time_module.sleep(1)
         
 
     def clock(self):
         """ Runs continuously, used by the printer """
         if self.DEBUG:
             print("clock thread init")
-        time.sleep(5)
+        time_module.sleep(5)
         #last_run = 0
         while self.running:
-            #last_run = time.time()
+            #last_run = time_module.time()
             try:
                 if 'printer_interval' in self.persistent_data:
                     my_date = datetime.now()
                     #print("Current hour ", my_date.hour)
                     #print("Current minute ", my_date.minute)
+                    
                     if self.persistent_data['printer_interval'] == 'hourly':
                         if my_date.minute == 0:
                             if self.DEBUG:
                                 print("HOURLY IS NOW")
                             print_result = self.print_now()
-                            if print_result['state'] == 'error':
-                                self.print_now()
-                            time.sleep(60 * 50) # sleep for 50 minutes
+                            #if print_result['state'] == 'error':
+                            #    self.print_now()
+                            time_module.sleep(60)
+                        
+                    if self.persistent_data['printer_interval'] == '3hourly':
+                        if my_date.minute == 0 and my_date.hour % 3 == 0:
+                            if self.DEBUG:
+                                print("3HOURLY IS NOW")
+                            print_result = self.print_now()
+                            #if print_result['state'] == 'error':
+                            #    self.print_now()
+                            time_module.sleep(60)
+                        
+                    if self.persistent_data['printer_interval'] == '6hourly':
+                        if my_date.minute == 0  and my_date.hour % 6 == 0:
+                            if self.DEBUG:
+                                print("6HOURLY IS NOW")
+                            print_result = self.print_now()
+                            #if print_result['state'] == 'error':
+                            #    self.print_now()
+                            time_module.sleep(60)
+                            
+                    if self.persistent_data['printer_interval'] == '12hourly':
+                        if my_date.minute == 0  and my_date.hour % 12 == 0:
+                            if self.DEBUG:
+                                print("12HOURLY IS NOW")
+                            print_result = self.print_now()
+                            #if print_result['state'] == 'error':
+                            #    self.print_now()
+                            time_module.sleep(60)
                         
                     elif self.persistent_data['printer_interval'] == 'daily':
                         if my_date.hour == 0 and my_date.minute == 0:
                             if self.DEBUG:
                                 print("DAILY IS NOW")
                             print_result = self.print_now()
-                            if print_result['state'] == 'error':
-                                self.print_now()
-                            time.sleep(60 * 50)
+                            #if print_result['state'] == 'error':
+                            #    self.print_now()
+                            time_module.sleep(60)
                         
                     elif self.persistent_data['printer_interval'] == 'weekly':
                         if datetime.today().weekday() == 0 and my_date.hour == 0 and my_date.minute == 0:
                             if self.DEBUG:
                                 print("WEEKLY IS NOW")
                             print_result = self.print_now()
-                            if print_result['state'] == 'error':
-                                self.print_now()
-                            time.sleep(60 * 50)
+                            #if print_result['state'] == 'error':
+                            #    self.print_now()
+                            time_module.sleep(60)
+            
+            
+                    # If internal logs should be auto-deleted, it will be attempted once per hour.
+                    if self.persistent_data['internal_logs_auto_delete'] == True and self.DEBUG == False:
+                        if my_date.minute == 3:
+                            if self.DEBUG:
+                                print("Attempting to auto-delete internal logs")
+                                
+                            delete_internal_logs_outcome = self.internal_logs("delete", "all")
+                            if isinstance(delete_internal_logs_outcome, str):
+                                if self.DEBUG:
+                                    print("Error while trying to delete internal logs: " + str(delete_internal_logs_outcome))
+                            time_module.sleep(60)
+                            
             
             except Excaption as ex:
                 print("error in clock thread: " + str(ex))
             
             #print("clock zzz")
-            time.sleep(30)
+            time_module.sleep(31)
+            try:
+                if self.printer != None:
+                    if self.printer_connected:
+                        self.printer_battery_level = self.printer.getDeviceBattery()
+                        #if self.DEBUG:
+                        #    print(f'Printer battery level: {self.printer_battery_level}%')
+            except Exception as ex:
+                if self.DEBUG:
+                    print("Error with periodic connnection upkeep to printer: " + str(ex))
+                    self.printer_connected = False
 
 
     # Read the settings from the add-on settings page
@@ -227,6 +291,7 @@ class PrivacyManagerAPIHandler(APIHandler):
             
         except:
             print("Error! Failed to open settings database.")
+            exit()
         
         if not config:
             print("Error loading config from database")
@@ -263,9 +328,8 @@ class PrivacyManagerAPIHandler(APIHandler):
             if request.path == '/ajax' or request.path == '/get_property_data' or request.path == '/point_change_value' or request.path == '/point_delete' or request.path == '/internal_logs' or request.path == '/init' or request.path == '/sculptor_init' or request.path == '/printer_init' or request.path == '/printer_scan' or request.path == '/printer_set' or request.path == '/print_now' or request.path == '/print_test':
 
                 try:
-                    
                     if request.path == '/ajax':
-                        
+    
                         state = "ok"
                         
                         try:
@@ -275,8 +339,9 @@ class PrivacyManagerAPIHandler(APIHandler):
                         
                         
                         if action == 'quick_delete':
-                            print("in quick delete")
-                            duration = str(request.body['duration']) 
+                            #print("in quick delete")
+                            duration = int(request.body['duration']) 
+                            self.quick_delete_filter(duration)
                             
                             return APIResponse(
                               status=200,
@@ -290,7 +355,7 @@ class PrivacyManagerAPIHandler(APIHandler):
                     
                     
                     if request.path == '/init' or request.path == '/sculptor_init' or request.path == '/printer_init':
-                        print("in /init or /sculptor_init")
+                        print("handling API request to /init or /sculptor_init")
                         # Get the list of properties that are being logged
                         try:
                             logs_list = self.get_logs_list()
@@ -299,11 +364,19 @@ class PrivacyManagerAPIHandler(APIHandler):
                                 state = 'error'
                             else:
                                 state = 'ok'
+                                
+                            internal_logs_auto_delete = False
+                            try:
+                                internal_logs_auto_delete = bool(self.persistent_data['internal_logs_auto_delete'])
+                            except Exception as ex:
+                                print("internal_logs_auto_delete init error: " + str(ex))
+                                self.persistent_data['internal_logs_auto_delete'] = False
+                                self.save_persistent_data()
                             
                             return APIResponse(
                               status=200,
                               content_type='application/json',
-                              content=json.dumps({'state': state, 'logs': logs_list, 'scanning': self.doing_bluetooth_scan, 'printer_mac': self.persistent_data['printer_mac'],'printer_name':self.persistent_data['printer_name'], 'persistent': self.persistent_data}),
+                              content=json.dumps({'state': state, 'logs': logs_list, 'scanning': self.doing_bluetooth_scan, 'persistent': self.persistent_data, 'printer_connected':self.printer_connected, 'internal_logs_auto_delete': internal_logs_auto_delete, 'debug': self.DEBUG}),
                             )
                         except Exception as ex:
                             print("Error handling init request: " + str(ex))
@@ -352,10 +425,17 @@ class PrivacyManagerAPIHandler(APIHandler):
                         
                         try:
                             
-                            print(str(request.body))
+                            if self.DEBUG:
+                                print(str(request.body))
                             
                             if 'printer_log' in request.body and 'printer_log_name' in request.body and 'printer_interval' in request.body and 'printer_rotation' in request.body:
                                 print("new persistance data received")
+                                
+                                if self.persistent_data['printer_log_name'] != str(request.body['printer_log_name']):
+                                    if self.DEBUG:
+                                        print("The log name will be printed next time")
+                                    self.should_print_log_name = True
+                                
                                 self.persistent_data['printer_log'] = str(request.body['printer_log']) 
                                 self.persistent_data['printer_log_name'] = str(request.body['printer_log_name'])
                                 self.persistent_data['printer_interval'] = str(request.body['printer_interval'])
@@ -388,7 +468,8 @@ class PrivacyManagerAPIHandler(APIHandler):
                     elif request.path == '/print_now':
                         
                         try:
-                            print("REQUEST TO PRINT NOW")
+                            if self.DEBUG:
+                                print("REQUEST TO PRINT NOW")
                             print_result = self.print_now()
                             
                             return APIResponse(
@@ -406,15 +487,15 @@ class PrivacyManagerAPIHandler(APIHandler):
                     
                     
                     elif request.path == '/print_test':
-                        
                         try:
-                            print("REQUEST TO TEST PRINTER")
-                            print_result = self.print_test()
+                            if self.DEBUG:
+                                print("REQUEST TO TEST PRINTER")
+                            printer_connected = self.print_test()
                             
                             return APIResponse(
                               status=200,
                               content_type='application/json',
-                              content=json.dumps({'state' : 'ok', 'print_result': print_result, 'scanning': self.doing_bluetooth_scan, 'persistent': self.persistent_data}),
+                              content=json.dumps({'state' : 'ok', 'printer_connected': printer_connected, 'scanning': self.doing_bluetooth_scan, 'persistent': self.persistent_data}),
                             )
                         except Exception as ex:
                             print("Error in /print_now: " + str(ex))
@@ -429,10 +510,12 @@ class PrivacyManagerAPIHandler(APIHandler):
                     
                     elif request.path == '/get_property_data':
                         try:
-                            print("request.body['property_id'] = " + str(request.body['property_id']))
+                            if self.DEBUG:
+                                print("request.body['property_id'] = " + str(request.body['property_id']))
                             if int(request.body['property_id']) in self.data_types_lookup_table:
                                 target_data_type = self.data_types_lookup_table[int(request.body['property_id'])]
-                                print("target data type from internal lookup table: " + str(target_data_type))
+                                if self.DEBUG:
+                                    print("target data type from internal lookup table: " + str(target_data_type))
                                 data = self.get_property_data( str(request.body['property_id']), str(target_data_type) )
                                 if isinstance(data, str):
                                     state = 'error'
@@ -468,7 +551,8 @@ class PrivacyManagerAPIHandler(APIHandler):
                         try:
                             data = []
                             target_data_type = self.data_types_lookup_table[int(request.body['property_id'])]
-                            print("target data type from internal lookup table: " + str(target_data_type))
+                            if self.DEBUG:
+                                print("target data type from internal lookup table: " + str(target_data_type))
                             # action, data_type, property_id, new_value, old_date, new_date
                             data = self.point_change_value( str(request.body['action']), target_data_type, str(request.body['property_id']), str(request.body['new_value']), str(request.body['old_date']), str(request.body['new_date']) )
                             if isinstance(data, str):
@@ -493,7 +577,8 @@ class PrivacyManagerAPIHandler(APIHandler):
                             
                             
                     elif request.path == '/point_delete':
-                        print("POINT DELETE CALLED")
+                        if self.DEBUG:
+                            print("POINT DELETE CALLED")
                         try:
                             data = []
                             
@@ -523,26 +608,41 @@ class PrivacyManagerAPIHandler(APIHandler):
                         
                         
                     elif request.path == '/internal_logs':
-                        print("INTERNAL LOGS CALLED")
+                        if self.DEBUG:
+                            print("/INTERNAL_LOGS CALLED")
                         try:
                             data = []
-                               
+                            state = "ok"
                             action = "get"
                             filename = "all"
-                            try:
-                                filename = str(request.body['filename']) 
-                            except:
-                                print("No specific filename provided")
+                            
                             try:
                                 action = str(request.body['action']) 
                             except:
-                                print("No specific action provided, will read data.")
-                               
+                                print("Warning, no specific action provided.")
+                                
+                            try:
+                                filename = str(request.body['filename']) 
+                            except:
+                                if self.DEBUG:
+                                    print("Internal logs API: no specific filename provided")
+                                
+                            if action == "auto-delete":
+                                internal_logs_auto_delete = bool(request.body['internal_logs_auto_delete'])
+                                self.persistent_data['internal_logs_auto_delete'] = internal_logs_auto_delete
+                                self.save_persistent_data()
+                                if internal_logs_auto_delete:
+                                    action = "delete" # immediately delete all internal logs
+                                
+                            # getting list of internal logs, deleting a single internal log, deleting all internal logs
+
+                        
                             data = self.internal_logs(action, filename)
                             if isinstance(data, str):
                                 state = 'error'
                             else:
                                 state = 'ok'
+                                
                             
                             return APIResponse(
                               status=200,
@@ -567,7 +667,7 @@ class PrivacyManagerAPIHandler(APIHandler):
                         
                         
                 except Exception as ex:
-                    print(str(ex))
+                    print("general error handling API request: " + str(ex))
                     return APIResponse(
                       status=500,
                       content_type='application/json',
@@ -589,7 +689,7 @@ class PrivacyManagerAPIHandler(APIHandler):
 
 
     # INIT
-    def get_logs_list(self):
+    def get_logs_list(self): # for data sculptor
         if self.DEBUG:
             print("Getting the logs list and updating lookup table")
         
@@ -606,7 +706,7 @@ class PrivacyManagerAPIHandler(APIHandler):
             cursor.execute("SELECT id,descr,maxAge FROM metricIds")
             all_rows = cursor.fetchall()
             #if self.DEBUG:
-            #print(str(all_rows));
+            #print(str(all_rows))
             for row in all_rows:
                 
                 # Get human readable title, if it's available.
@@ -622,8 +722,8 @@ class PrivacyManagerAPIHandler(APIHandler):
                         data_type = "metricsNumber"
                         #print("row[0] = " + str(row[0]))
                         self.data_types_lookup_table[row[0]] = 'metricsNumber'
-                        if self.DEBUG:
-                            print("Data type for this log is Number")
+                        #if self.DEBUG:
+                        #    print("Data type for this log is Number")
                             
                     else:
                         try:
@@ -635,7 +735,8 @@ class PrivacyManagerAPIHandler(APIHandler):
                                 if self.DEBUG:
                                     print("Data type for this log is Boolean")
                             else:
-                                print("Datatype also wasn't boolean either. Must be other? Or there currently just isn't any data for this log")
+                                if self.DEBUG:
+                                    print("Likely spotted an empty log")
                                 # TODO here support for "other" can be added later, if necessary
                         except Exception as ex:
                             print("Error querying if boolean data exists for this item: " + str(ex))
@@ -647,13 +748,14 @@ class PrivacyManagerAPIHandler(APIHandler):
                 result.append( {'id':row[0],'name':row[1], 'data_type':data_type} )
                 
             db.close()
-            print("logs list: " + str(result))
-            
-            print("self.data_types_lookup_table = " + str(self.data_types_lookup_table))
+            if self.DEBUG:
+                print("logs list: " + str(result))
+                print("self.data_types_lookup_table = " + str(self.data_types_lookup_table))
             return result
     
         except Exception as e:
-            print("Init: Error reading data: " + str(e))
+            if self.DEBUG:
+                print("Init: Error reading data: " + str(e))
             try:
                 db.close()
             except:
@@ -665,23 +767,27 @@ class PrivacyManagerAPIHandler(APIHandler):
     # GET ALL DATA FOR A SINGLE LOG
     def get_property_data(self, property_id, data_type):
         if self.DEBUG:
-            print("Getting data for thing " + str(property_id) + " of type " + str(data_type))
+            print("Getting data for single log: " + str(property_id) + ", of type: " + str(data_type))
         result = []
         
         if property_id == None or data_type == None:
-            print("No thing ID or data type provided")
+            if self.DEBUG:
+                print("No thing ID or data type provided")
             return result
         
         if not data_type in ("metricsBoolean", "metricsNumber", "metricsOther"):
-            print("data_type not of allowed type")
+            if self.DEBUG:
+                print("data_type not of allowed type")
             return result
         
         try:
             db = sqlite3.connect(self.log_db_path)
         except Exception as e:
-            print("Error opening log database: " + str(e))
+            if self.DEBUG:
+                print("Error opening log database: " + str(e))
             return "Error opening log database: " + str(e)
             
+        print("sqlite3 db connected")
         try:
             cursor = db.cursor()
             cursor.execute("SELECT date, value FROM " + data_type + " WHERE id=?",(property_id,))
@@ -695,7 +801,8 @@ class PrivacyManagerAPIHandler(APIHandler):
             return result
     
         except Exception as e:
-            print("Get property data: error reading data: " + str(e))
+            if self.DEBUG:
+                print("Get property data: error reading data: " + str(e))
             try:
                 db.close()
             except:
@@ -709,15 +816,18 @@ class PrivacyManagerAPIHandler(APIHandler):
         
     # CHANGE VALUE OF A SINGLE POINT
     def point_change_value(self, action, data_type, property_id, new_value, old_date, new_date):
-        print("Asked to change/create data point for property " + str(property_id) + " of type " + str(data_type) + " in table " + str(action) + " to " + str(new_value))
+        if self.DEBUG:
+            print("Asked to change/create data point for property " + str(property_id) + " of type " + str(data_type) + " in table " + str(action) + " to " + str(new_value))
         result = "error"
         
         if property_id == None or action == None:
-            print("No action set or property ID provided")
+            if self.DEBUG:
+                print("No action set or property ID provided")
             return "error"
         
         if not data_type in ("metricsBoolean", "metricsNumber", "metricsOther"):
-            print("data_type not of allowed type")
+            if self.DEBUG:
+                print("data_type not of allowed type")
             return "error"
         
         if data_type == "metricsBoolean":
@@ -736,7 +846,8 @@ class PrivacyManagerAPIHandler(APIHandler):
             old_date = int(old_date)
             property_id = int(property_id)
         except:
-            print("Error: the date and/or property strings could not be turned into an int")
+            if self.DEBUG:
+                print("Error: the date and/or property strings could not be turned into an int")
             return "error"
         
         if self.DEBUG:
@@ -750,7 +861,8 @@ class PrivacyManagerAPIHandler(APIHandler):
         try:
             db = sqlite3.connect(self.log_db_path)
         except Exception as e:
-            print("Error opening log file: " + str(e))
+            if self.DEBUG:
+                print("Error opening log file: " + str(e))
             return "Error opening log file: " + str(e)
             
         try:
@@ -768,11 +880,13 @@ class PrivacyManagerAPIHandler(APIHandler):
                     
                     
             elif action == "create":
-                print("Creating a new data point")
+                if self.DEBUG:
+                    print("Creating a new data point")
                 #INSERT INTO projects(name,begin_date,end_date) VALUES(?,?,?)
                 #cursor.execute("INSERT INTO employees VALUES(1, 'John', 700, 'HR', 'Manager', '2017-01-04')"
                 command = "INSERT INTO {}(id,date,value) VALUES({},{},{})".format(data_type, property_id, new_date, new_value)
-                print("COMMAND = " + str(command))
+                if self.DEBUG:
+                    print("COMMAND = " + str(command))
                 cursor.execute(command)
                 #cursor.execute("INSERT INTO " + data_type + " VALUES ?,?,?", (property_id, new_date, new_value,))
                 db.commit()
@@ -795,7 +909,8 @@ class PrivacyManagerAPIHandler(APIHandler):
             return result
     
         except Exception as e:
-            print("Error changing point data: " + str(e))
+            if self.DEBUG:
+                print("Error changing point data: " + str(e))
             try:
                 db.close()
             except:
@@ -814,11 +929,13 @@ class PrivacyManagerAPIHandler(APIHandler):
         result = []
         
         if property_id == None:
-            print("No property ID provided")
+            if self.DEBUG:
+                print("No property ID provided")
             return result
         
         if not data_type in ("metricsBoolean", "metricsNumber", "metricsOther"):
-            print("data_type not of allowed type")
+            if self.DEBUG:
+                print("data_type not of allowed type")
             return result
         
         if self.DEBUG:
@@ -830,7 +947,8 @@ class PrivacyManagerAPIHandler(APIHandler):
         try:
             db = sqlite3.connect(self.log_db_path)
         except Exception as e:
-            print("Error opening log file: " + str(e))
+            if self.DEBUG:
+                print("Error opening log file: " + str(e))
             return []
             
         try:
@@ -850,8 +968,8 @@ class PrivacyManagerAPIHandler(APIHandler):
                 all_rows = cursor.fetchall()
             
                 for row in all_rows:
-                    if self.DEBUG:
-                        print('date: {0}, value: {1}'.format(row[0],row[1]))
+                    #if self.DEBUG:
+                    #    print('date: {0}, value: {1}'.format(row[0],row[1]))
                     result.append( {'date':row[0],'value':row[1]} )
                 
             else:
@@ -863,7 +981,8 @@ class PrivacyManagerAPIHandler(APIHandler):
             return result
     
         except Exception as e:
-            print("Error deleting a point: " + str(e))
+            if self.DEBUG:
+                print("Error deleting a point: " + str(e))
             try:
                 db.close()
             except:
@@ -883,9 +1002,12 @@ class PrivacyManagerAPIHandler(APIHandler):
         
         try:
             # First we delete what needs to be deleted.
+            
             if action == "delete":
                 for fname in os.listdir(self.log_dir_path):
-                    if fname.startswith("run-app.log") and fname != "run-app.log":
+                    print("log file: " + str(fname))
+                    if fname.startswith("run-app.log.") and fname != "run-app.log":
+                        print("- might delete this file")
                         if filename == "all":
                             try:
                                 os.remove(os.path.join(self.log_dir_path, fname))
@@ -906,12 +1028,13 @@ class PrivacyManagerAPIHandler(APIHandler):
         
             # Secondly, we send a list of (remaining) existing files.
             for fname in os.listdir(self.log_dir_path):
-                if fname.startswith("run-app.log") and fname != "run-app.log":
+                if fname.startswith("run-app.log.") and fname != "run-app.log":
                     result.append(fname)
                         
                         
         except Exception as ex:
-            print("Error in log handler: " + str(ex))
+            if self.DEBUG:
+                print("Error in log handler: " + str(ex))
 
         return result
 
@@ -961,7 +1084,8 @@ class PrivacyManagerAPIHandler(APIHandler):
                     self.save_persistent_data()
                             
         except Exception as e:
-            print("Error during Bluetooth printer scan: " + str(e))
+            if self.DEBUG:
+                print("Error during Bluetooth printer scan: " + str(e))
         
         if self.DEBUG:
             print("no longer doing Bluetooth scan")
@@ -978,12 +1102,13 @@ class PrivacyManagerAPIHandler(APIHandler):
             self.connect_to_printer()
             
             if self.printer.isConnected():
-                if self.DEBUG:
-                    print("print_test: printer is connected. Printing Hello World.")
-                    self.printer.printBreak(1)
-                else:
-                    self.printer.writeASCII('Hello World\n')
-                    self.printer.printBreak(100)
+                
+                #if self.DEBUG:
+                #    print("print_test: printer is connected. Printing Hello World.")
+                #    self.printer.printBreak(1)
+                #else:
+                #    self.printer.writeASCII('Hello World\n')
+                #    self.printer.printBreak(100)
                 return True
             
         except Exception as ex:
@@ -997,20 +1122,25 @@ class PrivacyManagerAPIHandler(APIHandler):
         
         try:
             
-            if 'printer_log' in self.persistent_data and 'printer_log_name' in self.persistent_data and self.persistent_data['printer_mac'] != '': # and 'printer_interval' in self.persistent_data:
-            
+            if 'printer_log' in self.persistent_data and 'printer_log_name' in self.persistent_data and 'printer_interval' in self.persistent_data and 'printer_rotation' in self.persistent_data and self.persistent_data['printer_mac'] != '': # and 'printer_interval' in self.persistent_data:
+                
+                if self.persistent_data['printer_interval'] == 'none':
+                    print("interval is none! Should not print")
+                    return {'state':'error','message':'interval is disabled'}
+                
                 self.get_logs_list()
                 
-                print_time = int(time.time()) # used to remember up until what moment data should be deleted later on
+                print_time = int(time_module.time()) # used to remember up until what moment data should be deleted later on
                 if self.DEBUG:
                     print("print time: " + str(print_time))
                     print("log ID: " + str(self.persistent_data['printer_log']) + " = " + str(self.persistent_data['printer_log_name']))
-                    print("lookup table: " + str(self.data_types_lookup_table))
+                    #print("lookup table: " + str(self.data_types_lookup_table))
                 
                 try:
                     log_data_type = self.data_types_lookup_table[ int(self.persistent_data['printer_log']) ]
                 except Exception as ex:
                     print("could not lookup log data type. Maybe no data?")
+                    return {'state':'error','message':'No data to print'}
                 
                 if self.DEBUG:
                     print("Log data type: " + str(log_data_type))
@@ -1024,7 +1154,7 @@ class PrivacyManagerAPIHandler(APIHandler):
                 if isinstance(log_data, list): #dict
                     log_data_length = len(log_data)
                     if self.DEBUG:
-                        print("log length: " + str(log_data_length))
+                        print("initial log length: " + str(log_data_length))
                     
                     if log_data_length > 1:
                         
@@ -1161,29 +1291,102 @@ class PrivacyManagerAPIHandler(APIHandler):
                         line_chart.render_to_png(self.chart_png_file_path)
                         """
                         
-                        custom_style = Style(
-                          background='#fff',
-                          #title_font_size='3',
-                          major_label_font_size='30',
-                          value_label_font_size='30')
+                        
+                        
+                        
+                        
+                        
+                        print("full log_data: " + str(log_data))
+                        
+                        
+                        # Prune to log data if it's too much to create a davaviz from.
+                        pruned_log_data = []
+                        counter = 0
+                        if log_data_length > 600:
+                            skip_factor = round( len(log_data) / 600 )
+                        
+                            
+                            for log_item in log_data:
+                                
+                                if counter == 0:
+                                    print("pruning: adding at counter 0")
+                                    pruned_log_data.append({'date':log_item['date'], 'value':log_item['value']})
+                                elif counter == len(log_data) - 1:
+                                    print("pruning: adding at counter end")
+                                    pruned_log_data.append({'date':log_item['date'], 'value':log_item['value']})
+                                else:
+                                    if counter % skip_factor == 0:
+                                        print("pruning adding at interval: " + str(counter))
+                                        pruned_log_data.append({'date':log_item['date'], 'value':log_item['value']})
+                            
+                                counter += 1
+                                
+                                    
+                            
+                            log_data = pruned_log_data
+                            log_data_length = len(log_data)
+                            if self.DEBUG:
+                                print("pruned log length: " + str(log_data_length))
+                        
+                        
+                        date_string_to_print = "" # a single line of text printed above the image, or as part of the image
                         
                         counter = 0
                         values = []
+                        time_values = []
+                        date_objects_array = []
+                        time_objects_array = []
+                        
+                        skippy = round( len(log_data) / 6 )
+                        
+                        date_objects_pruned = []
+                        time_objects_pruned = []
+                        print("log length: " + str(len(log_data)))
+                        
                         for log_item in log_data:
-                            counter += 1
+                            #print(str(counter))
                             
                             #print(str(log_item))
-                            date = log_item['date']
-                            value = log_item['value']
+                            d = round(log_item['date']/1000)
+                            v = log_item['value']
                             #print(str(date) + " -> " + str(value))
                             #values.append(value)
-                            values.append(( round(date/1000), value ))
+                            
+                            
+                            date_object = datetime.fromtimestamp(d)
+                            date_objects_array.append( date_object )
+                            time_object = time(date_object.hour ,date_object.minute)
+                            time_objects_array.append( time_object )
                             #if counter == 0:
                             #    start = date
                             #if counter == 20:
                             #    print("breaking out of values loop")
                             #    break
                         
+                            if counter == 0:
+                                print("adding at counter 0")
+                                date_objects_pruned.append(date_object)
+                                time_objects_pruned.append(time_object)
+                            elif counter == len(log_data) - 1:
+                                print("adding at counter end")
+                                date_objects_pruned.append(date_object)
+                                time_objects_pruned.append(time_object)
+                            else:
+                                if counter % skippy == 0:
+                                    print("adding time_object at counter: " + str(counter))
+                                    date_objects_pruned.append(date_object)
+                                    time_objects_pruned.append(time_object)
+                        
+                        
+                            values.append( (date_object,v) )
+                            time_values.append( (time_object,v) )
+                            
+                            counter += 1
+                            
+                        print("time_objects_pruned length: " + str(len(time_objects_pruned)))
+                        
+                        
+                            
                         #some_list = []
                         #some_list.append((a, b))
                         #print("new values: " + str(values))
@@ -1191,45 +1394,258 @@ class PrivacyManagerAPIHandler(APIHandler):
                         
                         # pygal.graph.time.seconds_to_time
 
-                        
-
                         if self.DEBUG:
                             print("amount of values to print: " + str(len(values)))
                         
+                        
+                        #x_label_rotation = 45
+                        
+                        # How wide should the image be to accomodate all the data points?
                         dataviz_width = 304
                         if len(values) > 152:
                             dataviz_width = len(values) * 2
+                            
+                        if self.DEBUG:
+                            print("dataviz width: " + str(dataviz_width))
 
-                        #dateline = pygal.DateLine(x_label_rotation=45, range=(0, 750))
-                        dateline = pygal.DateLine(x_label_rotation=30, style=custom_style, width=dataviz_width, height=200)
+                        
+                        print_rotation = self.persistent_data['printer_rotation']
+                        
+                        if print_rotation == 'auto':
+                            if dataviz_width > 1000:
+                                if self.DEBUG:
+                                    print("forcing rotation for log because it has so much data in it")
+                                print_rotation = 270
+                            else:
+                                print_rotation = 0
+                                
+                        else:
+                            print_rotation = int(self.persistent_data['printer_rotation'])
+                        
+                        
+                        
+
+                        dataviz_height = 304
+                        if print_rotation == 0 or print_rotation == 180:
+                            dataviz_height = 200
+
+                            
+                        #dataviz_width = dataviz_width * 2
+                        #dataviz_height = dataviz_height * 2
+
+
+                        # add the data to the log
+                        dateline = pygal.DateLine()
+                        dateline.add('',values)
+                        
+                            
+                        custom_style = Style(
+                          background='#fff',
+                          #title_font_size='3',
+                          #label_font_size='20',
+                          major_label_font_size='24',
+                          value_label_font_size='24')
+                          
+                        dateline.style = custom_style
+                            
+                        dateline.show_legend = False
+                        dateline.human_readable = True
+                        #dateline.x_label_rotation = 10
+                        #dateline.interpolate = 'hermite'
+                        
+                        dateline.width = dataviz_width
+                        dateline.height = dataviz_height
+                        dateline.show_x_labels = False
                         if self.DEBUG:
                             print("dateLine init done")
                         
-                        dateline.title = self.persistent_data['printer_log_name']
+                        if self.should_print_log_name:
+                            dateline.title = self.persistent_data['printer_log_name']
                         
-                        """
-                        if self.persistent_data['printer_interval'] == 'none':
-                            print("interval is none! Should not continue")
-                            return {'state':'error','message':'interval is disabled'}
+                        #pygal_config = pygal.Config()
+                        #pygal_config.show_legend = False
+                        #pygal_config.human_readable = True
                         
-                        elif self.persistent_data['printer_interval'] == 'hourly':
-                            print("HOUR: " + str( time.strftime("%H") ))
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        # Creating date/time labels
+                        try:
+                            print("log_data[0] = " + str(log_data[0]))
+                            log_start_timestamp = round( log_data[0]['date']/ 1000) #round( values[0][0] / 1000)
+                            log_end_timestamp = round( log_data[len(log_data)-1]['date']/ 1000) #round( values[len(values)-1][0] / 1000)
+                            print("X")
+                            print("first log date: " + str(log_start_timestamp))
+                            print("last log date: " + str(log_end_timestamp))
+                            print("X")
+                            millisecs = [x['date'] for x in log_data]
+                            vals = [x['value'] for x in log_data]
                             
-                            current_hour = int(time.strftime("%H"))
-                            previous_hour = current_hour - 1
-                            if current_hour == 0:
-                                previous_hour = 23
+                            minimum_value = min( vals )
+                            maximum_value = max( vals )
+                            print("maximum value: " + str(maximum_value))
+                            
+                            #delta_minutes = round((millisecs[len(millisecs)-1] - millisecs[0]) / 60000)
+                            delta_minutes = round((log_end_timestamp - log_start_timestamp) / 60)
+                            if self.DEBUG:
+                                print("delta minutes: " + str(delta_minutes))
+                            
+                            
+                            
+                            """
                                 
-                            print(str(current_hour))
-                            print(str(previous_hour))
-                            dateline.x_labels = [str(previous_hour), ':15', ':30',':45', str(current_hour)] #map(str, range(2002, 2013))
+                            # HOURLY LABELS
+                            if self.persistent_data['printer_interval'] == 'hourly' and delta_minutes < 60 and int(time_module.strftime("%m")) == 0: #and delta_minutes > 55
+                                print("HOUR: " + str( time_module.strftime("%H") ))
+                                
+                                current_hour = int(time_module.strftime("%H"))
+                                previous_hour = int(current_hour - 1)
+                                if current_hour == 0:
+                                    previous_hour = 23
+                                
+                                print(str(current_hour))
+                                print(str(previous_hour))
+                                #dateline.x_labels = [str(previous_hour), ':15', ':30',':45', str(current_hour)] #map(str, range(2002, 2013))
+                                
+                                #dateline.x_labels = [datetime.fromtimestamp(log_start_timestamp), datetime.fromtimestamp(log_end_timestamp)] #map(str, range(2002, 2013))
+                                
+                                date_string_to_print = current_hour + "h  -  " + current_hour + "h"
+                                dateline.x_title = date_string_to_print
+                                
+                                
+                                right_now = datetime.now()
+                                hour_ago  = right_now - timedelta(hours = 1)
+                                
+                                dateline.x_labels = [hour_ago, right_now]
+                                dateline.x_value_formatter=lambda dt: dt.strftime('%M:%S')
+                                
+                                #dateline.x_labels_major = [str(previous_hour), str(current_hour)]
+                                #dateline.x_label_rotation = 0
+                                
+                                
+                                
+                                
+                                
                             
-                        elif self.persistent_data['printer_interval'] == 'daily':
-                            dateline.x_labels = map(str, range(0, 24))
+                            # DAILY LABELS
+                            elif self.persistent_data['printer_interval'] == 'daily' and delta_minutes < 1450: #and delta_minutes > 1350 
+                                
+                                #dateline.x_labels = map(str, range(0, 24))
+                                #dateline.x_label_rotation = 0
+                                try:
+                                    today = date.today()
+                                    yesterday = today - timedelta(days = 1)
+                                    date_string_to_print = yesterday.strftime("%d %B, %Y") #.strftime("%Y%m%d")
+                                except Exception as ex:
+                                    print("error creating daily date string")
                             
-                        elif self.persistent_data['printer_interval'] == 'weekly':
-                            dateline.x_labels = ['m','t','w','t','f','s','s']
-                        """
+                            
+                            # WEEKLY LABELS
+                            elif self.persistent_data['printer_interval'] == 'weekly' and delta_minutes > 10000 and delta_minutes < 10180:
+                                dateline.x_labels = ['m ','t ','w ','t ','f ','s ','s ']
+                                #dateline.x_label_rotation = 0
+                                try:
+                                    today = date.today()
+                                    week_ago = today - timedelta(days = 7)
+                                    date_string_to_print = week_ago.strftime("%d %B, %Y") + "  ->  " + yesterday.strftime("%d %B, %Y") #.strftime("%Y%m%d")
+                                except Exception as ex:
+                                    print("error creating weekly date string")
+                            
+                            
+                            """
+                                
+                            #else:
+                            #elif delta_minutes < 1441:
+                            #print("Data is for less than a day, but not a complete hour")
+                            
+                            log_start_date = datetime.fromtimestamp(log_start_timestamp)
+                            #log_start_date2 = log_start_date.replace(tzinfo=timezone.utc)
+                            log_end_date = datetime.fromtimestamp(log_end_timestamp)
+                            #log_end_date2 = log_end_date.replace(tzinfo=timezone.utc)
+                            
+                            print("log_start hour and minute: " + str( log_start_date.strftime("%H:%M") ))
+                            #print("log_start hour and minute2: " + str( log_start_date2.strftime("%H:%M") ))
+                            print("log_end hour and minute: " + str( log_end_date.strftime("%H:%M") ))
+                            #print("log_end hour and minute2: " + str( log_end_date2.strftime("%H:%M") ))
+                            #dateline.x_labels = [log_start_date.strftime("%H:%M"),log_end_date.strftime("%H:%M")]
+                            
+                            dateline.x_label_rotation = 30
+                            
+                            dateline.truncate_label = -1
+                            dateline.x_labels = date_objects_array
+                            dateline.x_labels_major = [log_start_date,log_end_date] # date_objects_pruned #map(lambda d: d.strftime('%H:%M'), date_objects_pruned)
+                            
+                            dateline.show_minor_x_labels = False # in the end decided to mostly just print the date and time above the image, it's simpler and takes less space.
+                            
+                            if delta_minutes < 1441:
+                                date_string_to_print = log_start_date.strftime("%d %B, %Y -   %H:%M") + "  to  " + log_end_date.strftime("%H:%M") + ""
+                                #dateline.x_title = date_string_to_print
+                                #date_string_to_print = ""
+                            else:
+                                date_string_to_print = log_start_date.strftime("%H:%M  %d %B, %Y") + "  to  " + log_end_date.strftime("%H:%M  %d %B, %Y ") + ""
+                                                   
+                                
+                                
+                            
+                                
+                                
+                                #experi = [log_start_date.strftime('%H:%M')]
+                                #for x in range( len(values) - 2 ):
+                                #    experi.append(None)
+                                #experi.append(log_end_date.strftime('%H:%M'))
+                                #print("created experi")
+                                #dateline.x_labels = map(lambda d: d.strftime('%H:%M'), date_objects_array)
+                                #dateline.x_labels = map(lambda d: d.strftime('%H:%M'), experi)
+                                #dateline.x_labels = map(str, time_objects_array)
+                                #dateline.x_value_formatter = lambda dt: dt.strftime('%M:%S')
+                                #dateline.x_labels = map(str, time_objects_pruned)
+                                #dateline.x_labels = map(str, date_objects_pruned)
+                                #dateline.x_value_formatter = lambda dt: dt.strftime('%M:%S')
+                                #dateline.x_label_formatter = lambda dt: dt.strftime('%M:%S')
+                                
+                                #dateline.x_labels = map(lambda d: d.strftime('%H:%M'), date_objects_pruned)
+                                
+                                #dateline.x_labels = map(str, [datetime.fromtimestamp(log_start_timestamp), datetime.fromtimestamp(log_end_timestamp)])
+                                #dateline.x_labels = [datetime.fromtimestamp(log_start_timestamp), datetime.fromtimestamp(log_end_timestamp)]
+                                
+                                
+                                
+                                print("x labels added")
+                                
+                                #dateline.add('Here is axvspan', [(log_start_date, minimum_value), (log_end_date, maximum_value)])
+                                
+                                
+                                
+                                #dateline.x_value_formatter=lambda dt: dt.strftime('%d, %b %Y at %I:%M:%S %p')
+                                
+                                print("formatter added")
+                                #dateline.show_minor_x_labels = False
+                                #dateline.x_labels_major_every = len(date_objects_array) - 1
+                                #dateline.x_labels_major = [str(log_start_date.strftime("%H:%M")), str(log_end_date.strftime("%H:%M"))]
+                                #dateline.x_labels_major = [log_start_date, log_end_date]
+                            
+                            #else:
+                                # by default the dates will be shown
+                            #    print("default dates will be shown")
+                            #    pass
+                            
+                        except Exception as ex:
+                            print("error creating time labels: " + str(ex))
+                        
+                        
+
+                        
+                        
+
+                        
+
+                        
                         
                         
                         """
@@ -1248,14 +1664,26 @@ class PrivacyManagerAPIHandler(APIHandler):
                         #        (1389830399, 400),
                         #        (1402826470, 450),
                         #        (1420029285, 500)])
-                        dateline.add('',values) #, dots_size=4)
+                        #dateline.add('',values) #, dots_size=4)
 
 
+                        dateline.margin_top = 0
+                        dateline.margin_right = 0
+                        dateline.margin_bottom = 0
+                        dateline.show_x_guides = True
                         dateline.render_to_png(self.chart_png_file_path)
+                        
+                        #time.sleep(.1)
+                        
+                        if os.path.exists(self.chart_png_file_path) is False:
+                            return {'state':'error','message':'The image to be printed could not be generated'}
+                        
+                        
                         
                         if self.DEBUG:
                             print("DateLine dataviz generated. Attempting to (re)connect to printer")
-                        self.connect_to_printer()
+                        if self.printer.isConnected() == False:
+                            self.connect_to_printer()
                         
                         if self.printer.isConnected():
                             if self.DEBUG:
@@ -1269,20 +1697,30 @@ class PrivacyManagerAPIHandler(APIHandler):
                             
                             try:
                                 img = Image.open(self.chart_png_file_path).convert('RGBA')
-                                if 'printer_rotation' in self.persistent_data:
+                                
+                                
+                                
+                                if self.DEBUG:
+                                    print("rotation preference was: " + str(self.persistent_data['printer_rotation']))
+                                    print("actual print rotation: " + str(print_rotation))
+                                
+                                if print_rotation != 0:
                                     if self.DEBUG:
-                                        print("rotation preference was present: " + str(self.persistent_data['printer_rotation']))
-                                    if int(self.persistent_data['printer_rotation']) != 0:
-                                        if self.DEBUG:
-                                            print("rotating image")
-                                        img2 = img.rotate(int(self.persistent_data['printer_rotation']), expand=True)
-                                    else:
-                                        img2 = img
+                                        print("rotating image")
+                                    img2 = img.rotate(print_rotation, expand=True)
                                 else:
                                     img2 = img
+                                        
                             except Exception as ex:
                                 print('Error rotating image: ' + str(ex))
     
+                                
+                                
+                            # check if image exists.
+                                
+        
+                            if date_string_to_print != "":
+                                self.printer.writeASCII(date_string_to_print + '\n')
         
                             if self.DEBUG:
                                 print("Printing log image now")
@@ -1295,6 +1733,11 @@ class PrivacyManagerAPIHandler(APIHandler):
                             if self.do_not_delete_after_printing == False: # and self.DEBUG == False:
                                 print("about to delete data, since print was successful (if the paper hasn't run out...)")                                
                                 self.point_delete(self.persistent_data['printer_log'],log_data_type,0, print_time * 1000 ) # deletes all data in the log
+                            
+                                try:
+                                    os.remove(self.chart_png_file_path)
+                                except Exception as ex:
+                                    print("Warning, could not delete generated image:" + str(ex))
                             
                             return {'state':'ok','message':'Log was printed'}
                             
@@ -1320,83 +1763,11 @@ class PrivacyManagerAPIHandler(APIHandler):
                 return {'state':'error','message':'Missing parameters, could not print. Check and save your settings.'}
             
             
-
-            
-            
-            #line_chart.render_to_file('/home/pi/linechart.svg')
-            
-            
-            #print("creating print_me var")
-            #print_me = line_chart.render()
-            #print("type: " + str(type(print_me)))
-            
-            
-        
-            #printer.writeASCII('Hello World?\n')
-            #printer.printBreak(100)
-
-
-
-
-            # Set print concentration
-            
-            """
-            # Print image & break
-            try:
-                printer.printImage(print_me)
-            except Exception as ex:
-                print("printing print_me bytes failed: " + str(ex))
-            
-            print("printing break")
-            printer.printBreak(10)
-            
-            img = None
-        
-            
-            try:
-                img = Image.open('/home/pi/linechart.png')
-                img.rotate(180)
-            except:
-                print(f'Failed to open image /home/pi/linechart.png')
-        
-            
-        
-            printer.printImage(img, resample=Image.ANTIALIAS)
-            
-            print("PRINT NOW SUCCESSFULLY REACHED END")
-            
-            
-            bar_chart = pygal.Bar()
-            bar_chart.title = 'Browser usage evolution (in %)'
-            bar_chart.x_labels = map(str, range(2002, 2013))
-            bar_chart.add('Firefox', [None, None, 0, 16.6,   25,   31, 36.4, 45.5, 46.3, 42.8, 37.1])
-            bar_chart.add('Chrome',  [None, None, None, None, None, None,    0,  3.9, 10.8, 23.8, 35.3])
-            bar_chart.add('IE',      [85.8, 84.6, 84.7, 74.5,   66, 58.6, 54.7, 44.8, 36.2, 26.6, 20.1])
-            bar_chart.add('Others',  [14.2, 15.4, 15.3,  8.9,    9, 10.4,  8.9,  5.8,  6.7,  6.8,  7.5])
-            bar_chart.render()
-            
-            bar_chart.render_to_png('/home/pi/barchart.png')
-            
-            try:
-                img = Image.open('/home/pi/barchart.png')
-                img.rotate(180)
-            except:
-                print(f'Failed to open image /home/pi/linechart.png')
-        
-            
-            
-            #printer.printImage(img, resample=Image.ANTIALIAS)
-            
-            
-            printer.printBreak(10)
-            
-            print("PRINTED BAR CHART")
-            """
-            
             
         except Exception as e:
             print("ERROR in print_now: " + str(e))
-            return {'state':'error','message':'General error in print_now'}
+            return {'state':'error','message':'General error in print_now: ' + str(e)}
+
 
 
     def connect_to_printer(self):
@@ -1411,21 +1782,22 @@ class PrivacyManagerAPIHandler(APIHandler):
                     print("printer object exists")
                 if self.printer.isConnected() == False:
                     if self.DEBUG:
-                        print("Printer is not connected. Will attempt to connect.")
+                        print("Printer is not connected. Will attempt to reconnect.")
                     try:
-                        self.printer.connect()
+                        self.printer.reconnect()
                         self.printer.reset()
                     except:
                         if self.DEBUG:
-                            print("printer.connect didn't work, trying reconnect instead")
+                            print("printer.reconnect didn't work, trying connect instead")
                         try:
-                            self.printer.reconnect()
+                            self.printer.connect()
                             self.printer.reset()
                         except:
                             if self.DEBUG:
                                 print("printer.reconnect also didn't work")
                         
                 if self.printer.isConnected():
+                    self.printer_connected = True
                     if self.DEBUG:
                         print(f'Name: {self.printer.getDeviceName()}')
                         print(f'S/N: {self.printer.getDeviceSerialNumber()}')
@@ -1435,6 +1807,7 @@ class PrivacyManagerAPIHandler(APIHandler):
                         print(f'MAC: {self.printer.getDeviceMAC()}')
                 else:
                     print("ERROR, was unable to (re)connect to the printer")
+                    self.printer_connected = False
                     
             else:
                 if self.DEBUG:
@@ -1473,6 +1846,31 @@ class PrivacyManagerAPIHandler(APIHandler):
 
 
 
+
+    # Deletes data from ALL logs for the last few minutes/hours
+    def quick_delete_filter(self,duration):
+        print("in quick delete")
+        try:
+            if self.DEBUG:
+                print("in quick delete filter, with duration: " + str(duration))
+        
+            self.get_logs_list()
+        
+            current_time = int(time_module.time()) * 1000
+            early_time = current_time - (duration * 60 * 1000) # milliseconds
+            print("early_time: " + str(early_time))
+        
+            for log_id, log_data_type in self.data_types_lookup_table.items():
+                print("x")
+                print("quick deleting. Log_id: " + str(log_id) + ", data_type: " + str(log_data_type) + ", early_time: " + str(early_time) + ", current_time: " + str(current_time))
+                self.point_delete(log_id,log_data_type, early_time, current_time * 1000)
+        
+            self.send_pairing_prompt("Deleted the last " + str(duration * 60) + " minutes of log data")
+            
+        except Exception as ex:
+            print("error in quick_delete_filter: " + str(ex))
+
+
     def run_command_with_lines(self,command):
         try:
             p = subprocess.Popen(command,
@@ -1488,7 +1886,7 @@ class PrivacyManagerAPIHandler(APIHandler):
                 
             # This ensures the process has completed, AND sets the 'returncode' attr
             while p.poll() is None:                                                                                                                                        
-                time.sleep(.1) #Don't waste CPU-cycles
+                time_module.sleep(.1) #Don't waste CPU-cycles
             # Empty STDERR buffer
             err = p.stderr.read()
             if p.returncode == 0:
@@ -1506,6 +1904,31 @@ class PrivacyManagerAPIHandler(APIHandler):
             print("Error running shell command: " + str(ex))
     
 
+
+
+
+
+
+
+
+
+        #
+        #  Handling the thing
+        #
+
+
+    def thing_delete_button_pushed(self):
+        print("(())")
+        print("in thing_delete_button_pushed")
+        print("(())")
+        #self.adapter.send_pairing_prompt("Deleted the last " + "xx" + " minutes of log data")
+        
+
+
+
+
+
+
 def extract_mac(line):
     #p = re.compile(r'(?:[0-9a-fA-F]:?){12}')
     p = re.compile(r'((([a-zA-z0-9]{2}[-:]){5}([a-zA-z0-9]{2}))|(([a-zA-z0-9]{2}:){5}([a-zA-z0-9]{2})))')
@@ -1516,3 +1939,7 @@ def valid_mac(mac):
     return mac.count(':') == 5 and \
         all(0 <= int(num, 16) < 256 for num in mac.rstrip().split(':')) and \
         not all(int(num, 16) == 255 for num in mac.rstrip().split(':'))
+
+
+
+

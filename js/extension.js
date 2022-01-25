@@ -68,223 +68,253 @@
 
 
         display_thing_data(property_id, data_type, raw_data) { // Uses json to generate dataviz
-            console.log("in display_thing_data. property_id: " + property_id);
-            const dataviz = document.getElementById('extension-privacy-manager-thing-dataviz');
-            console.log("dataviz:",dataviz);
-            //dataviz.innerHTML = "";
             
-            var data = []
+            try{
+                console.log("in display_thing_data. property_id: " + property_id);
+                const dataviz = document.getElementById('extension-privacy-manager-thing-dataviz');
+                //console.log("dataviz:",dataviz);
+                //dataviz.innerHTML = "";
+            
+            
+                if(raw_data.length == 0){
+                    console.log("no data to visualize");
+                    document.getElementById('extension-privacy-manager-no-data-available').style.display = 'block';
+                    document.getElementById("extension-privacy-manager-thing-dataviz-svg").style.display = 'none';
+                }
+                else{
+                    document.getElementById('extension-privacy-manager-no-data-available').style.display = 'none';
+                    document.getElementById("extension-privacy-manager-thing-dataviz-svg").style.display = 'block';
+                    /*
+                    let svg_element = document.createElement("svg");  
+                    svg_element.classList.add('extension-privacy-manager-thing-dataviz-svg');
+                    dataviz.appendChild(svg_element); 
+                    */
+                }
 
-            for (var key in raw_data) {
-                data.push({
-                    'date': raw_data[key]['date'],
-                    'value': raw_data[key]['value']
+            
+                var data = []
+
+                for (var key in raw_data) {
+                    data.push({
+                        'date': raw_data[key]['date'],
+                        'value': raw_data[key]['value']
+                    });
+                }
+
+            
+                //document.body.appendChild(btn);  
+            
+                var elem = document.getElementById("extension-privacy-manager-thing-dataviz-svg > *");
+                if (elem != null) {
+                    elem.parentNode.removeChild(elem);
+                }
+                
+                console.log("svg? ", typeof document.getElementById('extension-privacy-manager-thing-dataviz-svg'));
+
+                //var svg = d3.select("#extension-privacy-manager-thing-dataviz").append("svg"),
+                var svg = d3.select("#extension-privacy-manager-thing-dataviz-svg"),
+                    margin = {
+                        top: 20,
+                        right: 20,
+                        bottom: 110,
+                        left: 40
+                    },
+                    margin2 = {
+                        top: 430,
+                        right: 20,
+                        bottom: 30,
+                        left: 40
+                    },
+                    width = +svg.attr("width") - margin.left - margin.right,
+                    height = +svg.attr("height") - margin.top - margin.bottom,
+                    height2 = +svg.attr("height") - margin2.top - margin2.bottom;
+
+
+                svg.selectAll("*").remove();
+
+                var date_array = [];
+                var value_array = [];
+
+                data.forEach(function(arrayItem) {
+                    date_array.push(new Date(arrayItem['date']));
+                    value_array.push(arrayItem['value']);
                 });
+
+
+                // Dimensions and margins
+                var svg = d3.select("#extension-privacy-manager-thing-dataviz-svg");
+
+                //var width = +svg.attr("width")
+                var width = document.getElementById('extension-privacy-manager-thing-dataviz').offsetWidth;
+                //console.log("offsetWidth = " + width);
+                document.getElementById('extension-privacy-manager-thing-dataviz-svg').style.width = width + "px";
+                //console.log();
+
+                var height = +svg.attr("height")
+
+                width = width - 50;
+                height = height - 50;
+
+                //var margin = {top: (0.1*width), right: (0.1*width), bottom: (0.1*width), left: (0.1*width)};
+                //var margin = {top: 0, right: (0.1*width), bottom: (0.1*width), left: (0.1*width)};
+                var margin = {
+                    top: 10,
+                    right: 0,
+                    bottom: 0,
+                    left: 50
+                };
+
+                // create a clipping region 
+                svg.append("defs").append("clipPath")
+                    .attr("id", "clip")
+                    .append("rect")
+                    .attr("width", width)
+                    .attr("height", height);
+
+                // Give the data a bit more space at the top and bottom
+                var extra_low = d3.min(value_array) - 1;
+                var extra_high = d3.max(value_array) + 1;
+
+                // Check if the minimum and maximum date range has changed/expanded. This is used when deleting data.
+                var minimum_time = d3.min(date_array)
+                var maximum_time = d3.max(date_array)
+
+                if (minimum_time < this.min_time) {
+                    this.min_time = minimum_time;
+                }
+                if (maximum_time > this.max_time) {
+                    this.max_time = maximum_time;
+                }
+
+                // create scale objects
+                var xScale = d3.scaleTime()
+                    //.domain(d3.extent(date_array))
+                    .domain([minimum_time, maximum_time])
+                    .range([0, width]);
+                var yScale = d3.scaleLinear()
+                    //.domain(d3.extent(value_array))
+                    .domain([d3.min(value_array) - 1, d3.max(value_array) + 1])
+                    .range([height, 0]);
+
+                // create axes
+                var xAxis = d3.axisBottom(xScale);
+                //.ticks(20, "s");
+
+
+                var yAxis = d3.axisLeft(yScale)
+                    .ticks(20, "s");
+
+                // Draw Axis
+                var gX = svg.append('g')
+                    .attr('transform', 'translate(' + margin.left + ',' + (margin.top + height) + ')')
+                    .call(xAxis);
+                var gY = svg.append('g')
+                    .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+                    .call(yAxis);
+
+                // Rectangle for the zoom function
+                var rectangle_overlay = svg.append("rect")
+                    .attr("width", width)
+                    .attr("height", height)
+                    .style("fill", "none")
+                    .style("pointer-events", "all")
+                    .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+                //rectangle_overlay.call(zoom);
+
+                // Create datapoints holder
+                var points_g = svg.append("g")
+                    .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+                    .attr("clip-path", "url(#clip)")
+                    .classed("points_g", true);
+
+
+                // Draw Datapoints
+                var points = points_g.selectAll("circle").data(data);
+
+                points = points.enter().append("circle")
+                    .attr('cx', function(d) {
+                        return xScale(new Date(d.date))
+                    })
+                    .attr('cy', function(d) {
+                        return yScale(d.value)
+                    })
+                    .attr('r', 5)
+                    .style("fill-opacity", .5)
+                    .attr('class', 'extension-privacy-manager-svg-circle')
+                    .attr("data-value", function(d) {
+                        return d.value;
+                    })
+                    .attr("data-date", function(d) {
+                        return d.date;
+                    })
+                    .attr("data-property-id", property_id)
+                    .attr("data-data-type", data_type);
+
+
+                // Points mouse events
+                points_g.selectAll("circle")
+                    .on("mouseover", function(d) {
+                        //console.log(this);
+                        this.setAttribute('fill-opacity', 1);
+                        this.setAttribute('r', 7);
+                    })
+                    .on("mouseout", function(d) {
+                        //console.log(this);	
+                        this.setAttribute('fill-opacity', .5);
+                        this.setAttribute('r', 5);
+                    })
+                    .on("click", function(d) {
+                        //console.log(this);
+                        //console.log( this.getAttribute("data-date") );
+                        //console.log( this.getAttribute("data-value") );
+                        //console.log( this.getAttribute("data-property-id") );
+                        //console.log( this.getAttribute("data-data-type") );
+
+                        document.getElementById('extension-privacy-manager-thing-options').style.display = 'block';
+
+                        // reset all circle to blue
+                        d3.selectAll('.extension-privacy-manager-svg-circle')
+                            .style('fill', 'black');
+
+                        d3.select(this).style("fill", "magenta");
+
+                        document.getElementById('extension-privacy-manager-input-change-old-epoch').value = this.getAttribute("data-date");
+
+                        var select = new Date(Number(this.getAttribute("data-date")));
+                        console.log("selected point as date object = " + select);
+
+                        document.getElementById('extension-privacy-manager-input-change-value').value = this.getAttribute("data-value");
+                        document.getElementById('extension-privacy-manager-input-change-property-id').value = this.getAttribute("data-property-id");
+
+                        document.getElementById('extension-privacy-manager-input-second').value = select.getSeconds();
+                        document.getElementById('extension-privacy-manager-input-minute').value = select.getMinutes(); //select.toLocaleDateString("en-UK",{minute: '2-digit'});
+                        document.getElementById('extension-privacy-manager-input-hour').value = select.getHours();
+                        document.getElementById('extension-privacy-manager-input-day').value = select.getDate();
+                        console.log("select.getDate() = ", select.getDate() );
+                        console.log("select.getMonth() = ", select.getMonth() );
+                        document.getElementById('extension-privacy-manager-input-month').value = select.getMonth() + 1;
+                        document.getElementById('extension-privacy-manager-input-year').value = select.getFullYear();
+                        document.getElementById('extension-privacy-manager-input-millis').value = select.getMilliseconds();
+                        
+                        window.scrollTo(0,document.body.scrollHeight);
+                    })
+
+
+                // Zooming
+                var zoom = d3.zoom()
+                    .scaleExtent([.5, 20])
+                    .extent([
+                        [0, 0],
+                        [width, height]
+                    ])
+                    .on("zoom", zoomed);
+
+                rectangle_overlay.call(zoom);
             }
-
-            var elem = document.getElementById("extension-privacy-manager-thing-dataviz-svg > *");
-            if (elem != null) {
-                elem.parentNode.removeChild(elem);
+            catch(e){
+                console.log("Error showing dataviz: ", e);
             }
-
-
-            //var svg = d3.select("#extension-privacy-manager-thing-dataviz").append("svg"),
-            var svg = d3.select("#extension-privacy-manager-thing-dataviz-svg"),
-                margin = {
-                    top: 20,
-                    right: 20,
-                    bottom: 110,
-                    left: 40
-                },
-                margin2 = {
-                    top: 430,
-                    right: 20,
-                    bottom: 30,
-                    left: 40
-                },
-                width = +svg.attr("width") - margin.left - margin.right,
-                height = +svg.attr("height") - margin.top - margin.bottom,
-                height2 = +svg.attr("height") - margin2.top - margin2.bottom;
-
-
-            svg.selectAll("*").remove();
-
-            var date_array = [];
-            var value_array = [];
-
-            data.forEach(function(arrayItem) {
-                date_array.push(new Date(arrayItem['date']));
-                value_array.push(arrayItem['value']);
-            });
-
-
-            // Dimensions and margins
-            var svg = d3.select("#extension-privacy-manager-thing-dataviz-svg");
-
-            //var width = +svg.attr("width")
-            var width = document.getElementById('extension-privacy-manager-thing-dataviz').offsetWidth;
-            //console.log("offsetWidth = " + width);
-            document.getElementById('extension-privacy-manager-thing-dataviz-svg').style.width = width + "px";
-            //console.log();
-
-            var height = +svg.attr("height")
-
-            width = width - 50;
-            height = height - 50;
-
-            //var margin = {top: (0.1*width), right: (0.1*width), bottom: (0.1*width), left: (0.1*width)};
-            //var margin = {top: 0, right: (0.1*width), bottom: (0.1*width), left: (0.1*width)};
-            var margin = {
-                top: 10,
-                right: 0,
-                bottom: 0,
-                left: 50
-            };
-
-            // create a clipping region 
-            svg.append("defs").append("clipPath")
-                .attr("id", "clip")
-                .append("rect")
-                .attr("width", width)
-                .attr("height", height);
-
-            // Give the data a bit more space at the top and bottom
-            var extra_low = d3.min(value_array) - 1;
-            var extra_high = d3.max(value_array) + 1;
-
-            // Check if the minimum and maximum date range has changed/expanded. This is used when deleting data.
-            var minimum_time = d3.min(date_array)
-            var maximum_time = d3.max(date_array)
-
-            if (minimum_time < this.min_time) {
-                this.min_time = minimum_time;
-            }
-            if (maximum_time > this.max_time) {
-                this.max_time = maximum_time;
-            }
-
-            // create scale objects
-            var xScale = d3.scaleTime()
-                //.domain(d3.extent(date_array))
-                .domain([minimum_time, maximum_time])
-                .range([0, width]);
-            var yScale = d3.scaleLinear()
-                //.domain(d3.extent(value_array))
-                .domain([d3.min(value_array) - 1, d3.max(value_array) + 1])
-                .range([height, 0]);
-
-            // create axes
-            var xAxis = d3.axisBottom(xScale);
-            //.ticks(20, "s");
-
-
-            var yAxis = d3.axisLeft(yScale)
-                .ticks(20, "s");
-
-            // Draw Axis
-            var gX = svg.append('g')
-                .attr('transform', 'translate(' + margin.left + ',' + (margin.top + height) + ')')
-                .call(xAxis);
-            var gY = svg.append('g')
-                .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-                .call(yAxis);
-
-            // Rectangle for the zoom function
-            var rectangle_overlay = svg.append("rect")
-                .attr("width", width)
-                .attr("height", height)
-                .style("fill", "none")
-                .style("pointer-events", "all")
-                .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-            //rectangle_overlay.call(zoom);
-
-            // Create datapoints holder
-            var points_g = svg.append("g")
-                .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-                .attr("clip-path", "url(#clip)")
-                .classed("points_g", true);
-
-
-            // Draw Datapoints
-            var points = points_g.selectAll("circle").data(data);
-
-            points = points.enter().append("circle")
-                .attr('cx', function(d) {
-                    return xScale(new Date(d.date))
-                })
-                .attr('cy', function(d) {
-                    return yScale(d.value)
-                })
-                .attr('r', 5)
-                .style("fill-opacity", .5)
-                .attr('class', 'extension-privacy-manager-svg-circle')
-                .attr("data-value", function(d) {
-                    return d.value;
-                })
-                .attr("data-date", function(d) {
-                    return d.date;
-                })
-                .attr("data-property-id", property_id)
-                .attr("data-data-type", data_type);
-
-
-            // Points mouse events
-            points_g.selectAll("circle")
-                .on("mouseover", function(d) {
-                    //console.log(this);
-                    this.setAttribute('fill-opacity', 1);
-                    this.setAttribute('r', 7);
-                })
-                .on("mouseout", function(d) {
-                    //console.log(this);	
-                    this.setAttribute('fill-opacity', .5);
-                    this.setAttribute('r', 5);
-                })
-                .on("click", function(d) {
-                    //console.log(this);
-                    //console.log( this.getAttribute("data-date") );
-                    //console.log( this.getAttribute("data-value") );
-                    //console.log( this.getAttribute("data-property-id") );
-                    //console.log( this.getAttribute("data-data-type") );
-
-                    document.getElementById('extension-privacy-manager-thing-options').style.display = 'block';
-
-                    // reset all circle to blue
-                    d3.selectAll('.extension-privacy-manager-svg-circle')
-                        .style('fill', 'black');
-
-                    d3.select(this).style("fill", "magenta");
-
-                    document.getElementById('extension-privacy-manager-input-change-old-epoch').value = this.getAttribute("data-date");
-
-                    var select = new Date(Number(this.getAttribute("data-date")));
-                    console.log("selected point as date object = " + select);
-
-                    document.getElementById('extension-privacy-manager-input-change-value').value = this.getAttribute("data-value");
-                    document.getElementById('extension-privacy-manager-input-change-property-id').value = this.getAttribute("data-property-id");
-
-                    document.getElementById('extension-privacy-manager-input-second').value = select.getSeconds();
-                    document.getElementById('extension-privacy-manager-input-minute').value = select.getMinutes(); //select.toLocaleDateString("en-UK",{minute: '2-digit'});
-                    document.getElementById('extension-privacy-manager-input-hour').value = select.getHours();
-                    document.getElementById('extension-privacy-manager-input-day').value = select.getDate();
-                    console.log("select.getDate() = ", select.getDate() );
-                    console.log("select.getMonth() = ", select.getMonth() );
-                    document.getElementById('extension-privacy-manager-input-month').value = select.getMonth() + 1;
-                    document.getElementById('extension-privacy-manager-input-year').value = select.getFullYear();
-                    document.getElementById('extension-privacy-manager-input-millis').value = select.getMilliseconds();
-                })
-
-
-            // Zooming
-            var zoom = d3.zoom()
-                .scaleExtent([.5, 20])
-                .extent([
-                    [0, 0],
-                    [width, height]
-                ])
-                .on("zoom", zoomed);
-
-            rectangle_overlay.call(zoom);
+            
 
             function zoomed() {
 
@@ -335,6 +365,7 @@
             ).then((body) => {
                 console.log(body);
                 this.display_thing_data(target_property_id, target_data_type, body['data']);
+                
                 //pre.innerText = JSON.stringify(body, null, 2);
                 //pre.innerText = body['state'];
             }).catch((e) => {

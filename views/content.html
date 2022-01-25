@@ -1,7 +1,8 @@
 <div id="extension-privacy-manager-content" class="extension-privacy-manager-active-tab-beauty-filters">
-  
+  <div id="extension-privacy-manager-content-wrapper">
     <div id="extension-privacy-manager-content-container">
-        <h1><span id="extension-privacy-manager-icon"></span>Privacy manager</h1>
+        <h1 id="extension-privacy-manager-title"><span id="extension-privacy-manager-icon"></span>Privacy manager</h1>
+        
         <div id="extension-privacy-manager-tab-buttons-container" class="extension-privacy-manager-tab-buttons">
             <button id="extension-privacy-manager-tab-button-beauty-filters" class="extension-privacy-manager-main-tab-button">Beauty filters</button>
             <button id="extension-privacy-manager-tab-button-data-sculptor" class="extension-privacy-manager-main-tab-button">Data sculptor</button>
@@ -37,10 +38,15 @@
                     <h3>Data sculptor</h3>
                     <div id="extension-privacy-manager-data-sculptor">
                         <div id="extension-privacy-manager-thing-left">
-                            <ul id="extension-privacy-manager-thing-list">Loading...</ul>
+                            <ul id="extension-privacy-manager-thing-list">
+                                <div class="extension-privacy-manager-spinner">
+                                    <div></div><div></div><div></div><div></div>
+                                </div>
+                            </ul>
                         </div>
                         <div id="extension-privacy-manager-thing-display">
                             <div id="extension-privacy-manager-thing-dataviz">
+                                <div id="extension-privacy-manager-no-data-available" style="display:none">No data available</div>
                                 <svg id="extension-privacy-manager-thing-dataviz-svg" height="400"></svg>
                             </div>
                             <div id="extension-privacy-manager-thing-options">
@@ -409,20 +415,18 @@
 
         </div>
         
-        <br/>
-        <br/>
-        
         <div id="extension-privacy-manager-debug-warning" style="display:none">
             <h2>Debugging is enabled</h2>
             <p>This addon is currently set to save detailed information about its operation in the internal logs. This may impact your privacy, as this also means that insights into your behaviour might be stored in those logs.</p>
             <p>You can disable debugging mode by going to <span style="font-style:italic">Settings</span>, then <span style="font-style:italic">Addons</span>, and then clicking on the <span style="font-style:italic">Settings</span> button for the <span style="font-style:italic">Privacy Manager</span> addon. There you can uncheck the debugging option and click <span style="font-style:italic">Apply</span>.
         </div>
         
-        <div id="extension-privacy-manager-response">
+        <div id="extension-privacy-manager-response" style="display:none">
             <p id="extension-privacy-manager-response-data"></p>
         </div>
 
     </div>
+  </div>
 </div>
 
 

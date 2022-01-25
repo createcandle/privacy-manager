@@ -1,3 +1,7 @@
+#extension-privacy-manager-title{
+    text-align:center;
+}
+
 #extension-privacy-manager-content h3,
 #extension-privacy-manager-content h4{
     margin-top:4rem;
@@ -8,7 +12,6 @@
 }
 
 #extension-privacy-manager-view .clicked{
-	border-left:10px solid white;
 	background-color:rgba(255,255,255,.1);
 }
 
@@ -215,8 +218,6 @@
     margin-right:1rem;
 }
 
-
-
 #extension-privacy-manager-print-test-progress,
 #extension-privacy-manager-print-busy-scanning,
 #extension-privacy-manager-printer-list{
@@ -311,11 +312,6 @@
 	max-height: 100%;
 }
 
-#extension-privacy-manager-thing-display{
-	/*margin-left: 1rem;
-	padding:1rem;*/
-}
-
 #extension-privacy-manager-content label{
 	min-width: 100px;
 	display: inline-block;
@@ -374,8 +370,13 @@
 	flex-grow:1;
 	background-color: rgba(0,0,0,.2);
 	margin-bottom: 1.5rem;
+    color:inherit;
 }
 
+
+#extension-privacy-manager-thing-left{
+    overflow:auto;
+}
 
 #extension-privacy-manager-thing-list{
 	margin-top:0;
@@ -388,16 +389,20 @@
 	background-color:rgba(0,0,0,.1);
 	border-right:1rem solid transparent;
     cursor:pointer;
+    border-top-left-radius:.5rem;
+    border-bottom-left-radius:.5rem;
 }
 
-#extension-privacy-manager-thing-list li:hover{
-	background-color: rgba(255,255,255,.1);
+#extension-privacy-manager-thing-list li:not(.clicked):hover{
+	background-color: rgba(255,255,255,.05);
 }
 
 #extension-privacy-manager-thing-display{
 	/*width:calc(100% - 12rem);*/
 	background-color:rgba(255,255,255,.1);
 	width:100%;
+    border-top-right-radius:.5rem;
+    border-bottom-right-radius:.5rem;
 }
 
 #extension-privacy-manager-thing-dataviz{
@@ -426,8 +431,69 @@
 
 
 
-/*  OPTIONS PANEL */
 
+/*  spinner  */
+
+.extension-privacy-manager-spinner {
+  display: inline-block;
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin:0 auto;
+}
+.extension-privacy-manager-spinner div {
+  position: absolute;
+  top: 33px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.5);
+  animation-timing-function: cubic-bezier(0, 1, 1, 0);
+}
+.extension-privacy-manager-spinner div:nth-child(1) {
+  left: 8px;
+  animation: extension-privacy-manager-spinner1 0.6s infinite;
+}
+.extension-privacy-manager-spinner div:nth-child(2) {
+  left: 8px;
+  animation: extension-privacy-manager-spinner2 0.6s infinite;
+}
+.extension-privacy-manager-spinner div:nth-child(3) {
+  left: 32px;
+  animation: extension-privacy-manager-spinner2 0.6s infinite;
+}
+.extension-privacy-manager-spinner div:nth-child(4) {
+  left: 56px;
+  animation: extension-privacy-manager-spinner3 0.6s infinite;
+}
+@keyframes extension-privacy-manager-spinner1 {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes extension-privacy-manager-spinner3 {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(0);
+  }
+}
+@keyframes extension-privacy-manager-spinner2 {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(24px, 0);
+  }
+}
+
+
+
+/*  SCULPTOR OPTIONS */
 
 
 #extension-privacy-manager-thing-options{
@@ -589,6 +655,7 @@ INTERNAL LOGS
     background-color:red;
     color:white;
     border-radius:.5rem;
+    margin-top:4rem;
 }
 
 
@@ -626,6 +693,8 @@ INTERNAL LOGS
 		padding:1rem;*/
 		display:flex;
 		/*flex-wrap:wrap;*/
+        height:90vh;
+        min-height: 80rem;
 	}	
 	
 	#extension-privacy-manager-thing-left{
@@ -633,6 +702,13 @@ INTERNAL LOGS
 		min-width:300px;
 	}
 	
+    #extension-privacy-manager-no-data-available{
+        text-align:center;
+        padding:6rem 2rem;
+        margin:2rem;
+        border:1px dotted rgba(255,255,255,.7);
+    }
+    
 	.extension-privacy-manager-inline{
 		display:inline-block;
 	}

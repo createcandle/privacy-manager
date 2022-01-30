@@ -84,7 +84,7 @@
 */
 
 #extension-privacy-manager-view .extension-privacy-manager-tab-buttons button:not(.extension-privacy-manager-button-active){
-	background-color: rgba(0,0,0,.1);
+	/*background-color: rgba(0,0,0,.1);*/
 	/*color: white;*/
 }
 
@@ -113,6 +113,8 @@
 	border-radius: .7rem;
 	overflow: hidden;
 	font-size:0;
+    display:flex;
+    flex-wrap:wrap;
 }
 
 #extension-privacy-manager-view .extension-privacy-manager-tab-buttons button{
@@ -124,6 +126,7 @@
 }
 #extension-privacy-manager-view .extension-privacy-manager-tab-buttons button:last-child{
 	float:right;
+    margin-left:auto;
 }
 
 #extension-privacy-manager-view .extension-privacy-manager-tab-buttons button:hover{

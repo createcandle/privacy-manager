@@ -35,6 +35,7 @@ python3 -m pip install --upgrade defusedxml -t lib --no-binary :all: --prefix ""
 python3 -m pip install --upgrade tinycss2 -t lib --no-binary :all: --prefix ""
 python3 -m pip install --upgrade qrcode -t lib --no-binary :all: --prefix ""
 python3 -m pip install --upgrade pygal -t lib --no-binary :all: --prefix ""
+python3 -m pip install --upgrade bluetooth -t lib --no-binary :all: --prefix ""
 python3 -m pip install --upgrade ppa6 --no-dependencies -t lib --no-binary :all: --prefix ""
 #python3 -m pip install --upgrade matplotlib==3.0.2 -t lib --no-binary :all: --prefix ""
 

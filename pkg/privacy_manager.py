@@ -260,7 +260,7 @@ class PrivacyManagerAPIHandler(APIHandler):
                             time_module.sleep(60)
                             
             
-            except Excaption as ex:
+            except Exception as ex:
                 print("error in clock thread: " + str(ex))
             
             #print("clock zzz")

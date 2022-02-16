@@ -134,6 +134,14 @@
 	color:white;
 }
 
+#extension-privacy-manager-tab-button-internal-logs{
+    display:none;
+}
+
+.developer #extension-privacy-manager-tab-button-internal-logs{
+    display:initial;
+}
+
 
 
 /*  VLAKKEN  */
@@ -313,6 +321,12 @@
 #extension-privacy-manager-content-container{
 	height:100%;
 	max-height: 100%;
+}
+
+.zoom1 #extension-privacy-manager-content-container,
+.zoom2 #extension-privacy-manager-content-container,
+.zoom3 #extension-privacy-manager-content-container{
+    margin-bottom:40rem;
 }
 
 #extension-privacy-manager-content label{

@@ -683,7 +683,9 @@
                 
                 if(typeof body.debug != 'undefined'){
                     if(body.debug){
-                        document.getElementById('extension-privacy-manager-debug-warning').style.display = 'block';
+                        if(document.getElementById('extension-privacy-manager-debug-warning') != null){
+                            document.getElementById('extension-privacy-manager-debug-warning').style.display = 'block';
+                        }
                     }
                 }
                 
@@ -701,8 +703,7 @@
 
             }).catch((e) => {
                 //pre.innerText = e.toString();
-                console.log("Privacy manager: error in show function");
-                console.log(e.toString());
+                console.log("Privacy manager: error in show function: ", e);
             });
             
 

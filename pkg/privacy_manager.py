@@ -123,7 +123,7 @@ class PrivacyManagerAPIHandler(APIHandler):
             print("self.gateway_version did not exist")
         
         
-        self.persistent_data = {'printer_mac':'', 'printer_name':'','internal_logs_auto_delete':False}
+        self.persistent_data = {'printer_mac':'', 'printer_name':'','internal_logs_auto_delete':True}
         
         # Get persistent data
         try:
@@ -141,11 +141,14 @@ class PrivacyManagerAPIHandler(APIHandler):
                     self.save_persistent_data()
 
                 if 'internal_logs_auto_delete' not in self.persistent_data:
-                    self.persistent_data['internal_logs_auto_delete'] = False
+                    self.persistent_data['internal_logs_auto_delete'] = True
 
         except:
             print("Could not load persistent data (if you just installed the add-on then this is normal)")
             self.save_persistent_data()
+        
+        if 'duration' not in self.persistent_data:
+            self.persistent_data['duration'] = 30
         
         self.get_logs_list()
         
@@ -340,8 +343,8 @@ class PrivacyManagerAPIHandler(APIHandler):
                         
                         if action == 'quick_delete':
                             #print("in quick delete")
-                            duration = int(request.body['duration']) 
-                            self.quick_delete_filter(duration)
+                            self.persistent_data['duration'] = int(request.body['duration']) 
+                            self.quick_delete_filter(self.persistent_data['duration'])
                             
                             return APIResponse(
                               status=200,
@@ -355,11 +358,11 @@ class PrivacyManagerAPIHandler(APIHandler):
                     
                     
                     if request.path == '/init' or request.path == '/sculptor_init' or request.path == '/printer_init':
-                        print("handling API request to /init or /sculptor_init")
+                        #print("handling API request to /init or /sculptor_init")
                         # Get the list of properties that are being logged
                         try:
                             logs_list = self.get_logs_list()
-                            print(str(logs_list))
+                            #print(str(logs_list))
                             if isinstance(logs_list, str):
                                 state = 'error'
                             else:
@@ -787,7 +790,8 @@ class PrivacyManagerAPIHandler(APIHandler):
                 print("Error opening log database: " + str(e))
             return "Error opening log database: " + str(e)
             
-        print("sqlite3 db connected")
+        if self.DEBUG:
+            print("sqlite3 db connected")
         try:
             cursor = db.cursor()
             cursor.execute("SELECT date, value FROM " + data_type + " WHERE id=?",(property_id,))
@@ -816,8 +820,8 @@ class PrivacyManagerAPIHandler(APIHandler):
         
     # CHANGE VALUE OF A SINGLE POINT
     def point_change_value(self, action, data_type, property_id, new_value, old_date, new_date):
-        if self.DEBUG:
-            print("Asked to change/create data point for property " + str(property_id) + " of type " + str(data_type) + " in table " + str(action) + " to " + str(new_value))
+        #if self.DEBUG:
+        #    print("Asked to change/create data point for property " + str(property_id) + " of type " + str(data_type) + " in table " + str(action) + " to " + str(new_value))
         result = "error"
         
         if property_id == None or action == None:
@@ -846,17 +850,17 @@ class PrivacyManagerAPIHandler(APIHandler):
             old_date = int(old_date)
             property_id = int(property_id)
         except:
-            if self.DEBUG:
-                print("Error: the date and/or property strings could not be turned into an int")
+            #if self.DEBUG:
+            #    print("Error: the date and/or property strings could not be turned into an int")
             return "error"
         
-        if self.DEBUG:
-            print("action: " + str(action))
-            print("At old date " + str(old_date))
-            print("and new date " + str(new_date))
-            print("changing value to " + str(new_value))
-            print("for property " + str(property_id))
-            print("of type " + str(data_type))
+        #if self.DEBUG:
+        #    print("action: " + str(action))
+        #    print("At old date " + str(old_date))
+        #    print("and new date " + str(new_date))
+        #    print("changing value to " + str(new_value))
+        #    print("for property " + str(property_id))
+        #    print("of type " + str(data_type))
         
         try:
             db = sqlite3.connect(self.log_db_path)
@@ -880,13 +884,13 @@ class PrivacyManagerAPIHandler(APIHandler):
                     
                     
             elif action == "create":
-                if self.DEBUG:
-                    print("Creating a new data point")
+                #if self.DEBUG:
+                #    print("Creating a new data point")
                 #INSERT INTO projects(name,begin_date,end_date) VALUES(?,?,?)
                 #cursor.execute("INSERT INTO employees VALUES(1, 'John', 700, 'HR', 'Manager', '2017-01-04')"
                 command = "INSERT INTO {}(id,date,value) VALUES({},{},{})".format(data_type, property_id, new_date, new_value)
-                if self.DEBUG:
-                    print("COMMAND = " + str(command))
+                #if self.DEBUG:
+                #    print("COMMAND = " + str(command))
                 cursor.execute(command)
                 #cursor.execute("INSERT INTO " + data_type + " VALUES ?,?,?", (property_id, new_date, new_value,))
                 db.commit()
@@ -909,8 +913,8 @@ class PrivacyManagerAPIHandler(APIHandler):
             return result
     
         except Exception as e:
-            if self.DEBUG:
-                print("Error changing point data: " + str(e))
+            #if self.DEBUG:
+            #    print("Error changing point data: " + str(e))
             try:
                 db.close()
             except:
@@ -938,11 +942,11 @@ class PrivacyManagerAPIHandler(APIHandler):
                 print("data_type not of allowed type")
             return result
         
-        if self.DEBUG:
-            print("Delete from " + str(start_date))
-            print("to " + str(end_date))
-            print("for ID " + str(property_id))
-            print("of data_type " + str(data_type))
+        #if self.DEBUG:
+        #    print("Delete from " + str(start_date))
+        #    print("to " + str(end_date))
+        #    print("for ID " + str(property_id))
+        #    print("of data_type " + str(data_type))
         
         try:
             db = sqlite3.connect(self.log_db_path)
@@ -955,8 +959,8 @@ class PrivacyManagerAPIHandler(APIHandler):
             cursor = db.cursor()
             
             cursor.execute("DELETE FROM " + data_type + " WHERE id=? AND date>=? AND date<=?", (property_id,start_date,end_date,))
-            if self.DEBUG:
-                print("cursor.rowcount after deletion = " + str(cursor.rowcount))
+            #if self.DEBUG:
+            #    print("cursor.rowcount after deletion = " + str(cursor.rowcount))
             
             if cursor.rowcount > 0:
                 db.commit()
@@ -981,8 +985,8 @@ class PrivacyManagerAPIHandler(APIHandler):
             return result
     
         except Exception as e:
-            if self.DEBUG:
-                print("Error deleting a point: " + str(e))
+            #if self.DEBUG:
+            #    print("Error deleting a point: " + str(e))
             try:
                 db.close()
             except:
@@ -1017,7 +1021,8 @@ class PrivacyManagerAPIHandler(APIHandler):
                                 if self.DEBUG:
                                     print("Could not delete file: " + str(ex))
                         elif str(filename) == str(fname):
-                            print("WILL DELETE A SINGLE FILE: " + str(filename))
+                            if self.DEBUG:
+                                print("WILL DELETE A SINGLE FILE: " + str(filename))
                             try:
                                 os.remove(os.path.join(self.log_dir_path, fname))
                                 if self.DEBUG:
@@ -1125,7 +1130,7 @@ class PrivacyManagerAPIHandler(APIHandler):
             if 'printer_log' in self.persistent_data and 'printer_log_name' in self.persistent_data and 'printer_interval' in self.persistent_data and 'printer_rotation' in self.persistent_data and self.persistent_data['printer_mac'] != '': # and 'printer_interval' in self.persistent_data:
                 
                 if self.persistent_data['printer_interval'] == 'none':
-                    print("interval is none! Should not print")
+                    #print("interval is none! Should not print")
                     return {'state':'error','message':'interval is disabled'}
                 
                 self.get_logs_list()
@@ -1139,7 +1144,7 @@ class PrivacyManagerAPIHandler(APIHandler):
                 try:
                     log_data_type = self.data_types_lookup_table[ int(self.persistent_data['printer_log']) ]
                 except Exception as ex:
-                    print("could not lookup log data type. Maybe no data?")
+                    #print("could not lookup log data type. Maybe no data?")
                     return {'state':'error','message':'No data to print'}
                 
                 if self.DEBUG:
@@ -1296,7 +1301,7 @@ class PrivacyManagerAPIHandler(APIHandler):
                         
                         
                         
-                        print("full log_data: " + str(log_data))
+                        #print("full log_data: " + str(log_data))
                         
                         
                         # Prune to log data if it's too much to create a davaviz from.
@@ -1309,14 +1314,14 @@ class PrivacyManagerAPIHandler(APIHandler):
                             for log_item in log_data:
                                 
                                 if counter == 0:
-                                    print("pruning: adding at counter 0")
+                                    #print("pruning: adding at counter 0")
                                     pruned_log_data.append({'date':log_item['date'], 'value':log_item['value']})
                                 elif counter == len(log_data) - 1:
-                                    print("pruning: adding at counter end")
+                                    #print("pruning: adding at counter end")
                                     pruned_log_data.append({'date':log_item['date'], 'value':log_item['value']})
                                 else:
                                     if counter % skip_factor == 0:
-                                        print("pruning adding at interval: " + str(counter))
+                                        #print("pruning adding at interval: " + str(counter))
                                         pruned_log_data.append({'date':log_item['date'], 'value':log_item['value']})
                             
                                 counter += 1
@@ -1341,7 +1346,7 @@ class PrivacyManagerAPIHandler(APIHandler):
                         
                         date_objects_pruned = []
                         time_objects_pruned = []
-                        print("log length: " + str(len(log_data)))
+                        #print("log length: " + str(len(log_data)))
                         
                         for log_item in log_data:
                             #print(str(counter))
@@ -1364,16 +1369,16 @@ class PrivacyManagerAPIHandler(APIHandler):
                             #    break
                         
                             if counter == 0:
-                                print("adding at counter 0")
+                                #print("adding at counter 0")
                                 date_objects_pruned.append(date_object)
                                 time_objects_pruned.append(time_object)
                             elif counter == len(log_data) - 1:
-                                print("adding at counter end")
+                                #print("adding at counter end")
                                 date_objects_pruned.append(date_object)
                                 time_objects_pruned.append(time_object)
                             else:
                                 if counter % skippy == 0:
-                                    print("adding time_object at counter: " + str(counter))
+                                    #print("adding time_object at counter: " + str(counter))
                                     date_objects_pruned.append(date_object)
                                     time_objects_pruned.append(time_object)
                         
@@ -1383,7 +1388,7 @@ class PrivacyManagerAPIHandler(APIHandler):
                             
                             counter += 1
                             
-                        print("time_objects_pruned length: " + str(len(time_objects_pruned)))
+                        #print("time_objects_pruned length: " + str(len(time_objects_pruned)))
                         
                         
                             
@@ -1394,8 +1399,8 @@ class PrivacyManagerAPIHandler(APIHandler):
                         
                         # pygal.graph.time.seconds_to_time
 
-                        if self.DEBUG:
-                            print("amount of values to print: " + str(len(values)))
+                        #if self.DEBUG:
+                        #    print("amount of values to print: " + str(len(values)))
                         
                         
                         #x_label_rotation = 45
@@ -1477,19 +1482,19 @@ class PrivacyManagerAPIHandler(APIHandler):
                         
                         # Creating date/time labels
                         try:
-                            print("log_data[0] = " + str(log_data[0]))
+                            #print("log_data[0] = " + str(log_data[0]))
                             log_start_timestamp = round( log_data[0]['date']/ 1000) #round( values[0][0] / 1000)
                             log_end_timestamp = round( log_data[len(log_data)-1]['date']/ 1000) #round( values[len(values)-1][0] / 1000)
-                            print("X")
-                            print("first log date: " + str(log_start_timestamp))
-                            print("last log date: " + str(log_end_timestamp))
-                            print("X")
+                            #print("X")
+                            #print("first log date: " + str(log_start_timestamp))
+                            #print("last log date: " + str(log_end_timestamp))
+                            #print("X")
                             millisecs = [x['date'] for x in log_data]
                             vals = [x['value'] for x in log_data]
                             
                             minimum_value = min( vals )
                             maximum_value = max( vals )
-                            print("maximum value: " + str(maximum_value))
+                            #print("maximum value: " + str(maximum_value))
                             
                             #delta_minutes = round((millisecs[len(millisecs)-1] - millisecs[0]) / 60000)
                             delta_minutes = round((log_end_timestamp - log_start_timestamp) / 60)
@@ -1569,9 +1574,9 @@ class PrivacyManagerAPIHandler(APIHandler):
                             log_end_date = datetime.fromtimestamp(log_end_timestamp)
                             #log_end_date2 = log_end_date.replace(tzinfo=timezone.utc)
                             
-                            print("log_start hour and minute: " + str( log_start_date.strftime("%H:%M") ))
+                            #print("log_start hour and minute: " + str( log_start_date.strftime("%H:%M") ))
                             #print("log_start hour and minute2: " + str( log_start_date2.strftime("%H:%M") ))
-                            print("log_end hour and minute: " + str( log_end_date.strftime("%H:%M") ))
+                            #print("log_end hour and minute: " + str( log_end_date.strftime("%H:%M") ))
                             #print("log_end hour and minute2: " + str( log_end_date2.strftime("%H:%M") ))
                             #dateline.x_labels = [log_start_date.strftime("%H:%M"),log_end_date.strftime("%H:%M")]
                             
@@ -1616,7 +1621,7 @@ class PrivacyManagerAPIHandler(APIHandler):
                                 
                                 
                                 
-                                print("x labels added")
+                                #print("x labels added")
                                 
                                 #dateline.add('Here is axvspan', [(log_start_date, minimum_value), (log_end_date, maximum_value)])
                                 
@@ -1624,7 +1629,7 @@ class PrivacyManagerAPIHandler(APIHandler):
                                 
                                 #dateline.x_value_formatter=lambda dt: dt.strftime('%d, %b %Y at %I:%M:%S %p')
                                 
-                                print("formatter added")
+                                #print("formatter added")
                                 #dateline.show_minor_x_labels = False
                                 #dateline.x_labels_major_every = len(date_objects_array) - 1
                                 #dateline.x_labels_major = [str(log_start_date.strftime("%H:%M")), str(log_end_date.strftime("%H:%M"))]
@@ -1731,47 +1736,55 @@ class PrivacyManagerAPIHandler(APIHandler):
                             self.printer.printBreak(100)
                             
                             if self.do_not_delete_after_printing == False: # and self.DEBUG == False:
-                                print("about to delete data, since print was successful (if the paper hasn't run out...)")                                
+                                if self.DEBUG:
+                                    print("about to delete data, since print was successful (if the paper hasn't run out...)")                                
                                 self.point_delete(self.persistent_data['printer_log'],log_data_type,0, print_time * 1000 ) # deletes all data in the log
                             
                                 try:
                                     os.remove(self.chart_png_file_path)
                                 except Exception as ex:
-                                    print("Warning, could not delete generated image:" + str(ex))
+                                    if self.DEBUG:
+                                        print("Warning, could not delete generated image:" + str(ex))
                             
                             return {'state':'ok','message':'Log was printed'}
                             
                         else:
-                            print("print_now: error, not connected to printer")
+                            if self.DEBUG:
+                                print("print_now: error, not connected to printer")
                             return {'state':'error','message':'Could not connect to printer'}
                         
                     elif log_data_length == 1:
                         print("only one data point in this period")
                         
-                        return {'state':'ok','message':'Log only had one datapoint. It was printed as text.'}
+                        return {'state':'ok','message':'Log only had one datapoint.'}
                         
                     elif log_data_length == 0:
-                        print("no data point in this period")
+                        if self.DEBUG:
+                            print("no data points to print")
                         
                         return {'state':'ok','message':'Log did not contain any data points'}
                 
                 else:
-                    print("Error: log data could not be loaded")
+                    if self.DEBUG:
+                        print("Error: log data could not be loaded")
                     return {'state':'error','message':'Log data could not be loaded.'}
             else:
-                print("missing parameters")
+                if self.DEBUG:
+                    print("missing parameters")
                 return {'state':'error','message':'Missing parameters, could not print. Check and save your settings.'}
             
             
             
         except Exception as e:
-            print("ERROR in print_now: " + str(e))
+            if self.DEBUG:
+                print("ERROR in print_now: " + str(e))
             return {'state':'error','message':'General error in print_now: ' + str(e)}
 
 
 
     def connect_to_printer(self):
-        print("in connect_to_printer")
+        if self.DEBUG:
+            print("in connect_to_printer")
         try:
             if self.printer == None and self.persistent_data['printer_mac'] != '':
                 print("creating printer object with mac: " + str(self.persistent_data['printer_mac']))
@@ -1840,8 +1853,9 @@ class PrivacyManagerAPIHandler(APIHandler):
                 return True
 
         except Exception as ex:
-            print("Error: could not store data in persistent store: " + str(ex) )
-            print(str(self.persistent_data))
+            if self.DEBUG:
+                print("Error: could not store data in persistent store: " + str(ex) )
+                print(str(self.persistent_data))
             return False
 
 
@@ -1849,7 +1863,8 @@ class PrivacyManagerAPIHandler(APIHandler):
 
     # Deletes data from ALL logs for the last few minutes/hours
     def quick_delete_filter(self,duration):
-        print("in quick delete")
+        if self.DEBUG:
+            print("in quick delete")
         try:
             if self.DEBUG:
                 print("in quick delete filter, with duration: " + str(duration))
@@ -1858,17 +1873,20 @@ class PrivacyManagerAPIHandler(APIHandler):
         
             current_time = int(time_module.time()) * 1000
             early_time = current_time - (duration * 60 * 1000) # milliseconds
-            print("early_time: " + str(early_time))
+            if self.DEBUG:
+                print("early_time: " + str(early_time))
         
             for log_id, log_data_type in self.data_types_lookup_table.items():
-                print("x")
-                print("quick deleting. Log_id: " + str(log_id) + ", data_type: " + str(log_data_type) + ", early_time: " + str(early_time) + ", current_time: " + str(current_time))
+                if self.DEBUG:
+                    print("x")
+                    print("quick deleting. Log_id: " + str(log_id) + ", data_type: " + str(log_data_type) + ", early_time: " + str(early_time) + ", current_time: " + str(current_time))
                 self.point_delete(log_id,log_data_type, early_time, current_time * 1000)
         
             self.send_pairing_prompt("Deleted the last " + str(duration * 60) + " minutes of log data")
             
         except Exception as ex:
-            print("error in quick_delete_filter: " + str(ex))
+            if self.DEBUG:
+                print("error in quick_delete_filter: " + str(ex))
 
 
     def run_command_with_lines(self,command):
@@ -1918,11 +1936,12 @@ class PrivacyManagerAPIHandler(APIHandler):
 
 
     def thing_delete_button_pushed(self):
-        print("(())")
-        print("in thing_delete_button_pushed")
-        print("(())")
+        if self.DEBUG:
+            print("(())")
+            print("in thing_delete_button_pushed")
+            print("(())")
         #self.adapter.send_pairing_prompt("Deleted the last " + "xx" + " minutes of log data")
-        
+        self.quick_delete_filter(self.persistent_data['duration'])
 
 
 

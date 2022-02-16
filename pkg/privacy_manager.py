@@ -74,6 +74,17 @@ class PrivacyManagerAPIHandler(APIHandler):
         self.should_print_log_name = False
         
         
+        
+        self.duration_lookup_table = {'1':'1 minute',
+                                    '10':'10 minutes',
+                                    '20':'20 minutes',
+                                    '60':'1 hour',
+                                    '120':'2 hours',
+                                    '240':'4 hours',
+                                    '480':'8 hours',
+                                }
+        
+        
         #print(str( time(11, 59, 59) ))
         
         try:
@@ -152,15 +163,16 @@ class PrivacyManagerAPIHandler(APIHandler):
         
         self.get_logs_list()
         
-        self.connect_to_printer()
-        
         try:
             self.adapter = PrivacyManagerAdapter(self,verbose=False)
             #self.manager_proxy.add_api_handler(self.extension)
-            print("ADAPTER created")
+            if self.DEBUG:
+                print("ADAPTER created")
             pass
         except Exception as ex:
             print("Failed to start ADAPTER. Error: " + str(ex))
+        
+        self.connect_to_printer()
         
         self.running = True
         
@@ -174,7 +186,8 @@ class PrivacyManagerAPIHandler(APIHandler):
             print("Error starting the clock thread: " + str(ex))
         
 
-        print("Privacy manager init complete")
+        if self.DEBUG:
+            print("Privacy manager init complete")
         
         
         #while(self.running):
@@ -342,8 +355,10 @@ class PrivacyManagerAPIHandler(APIHandler):
                         
                         
                         if action == 'quick_delete':
-                            #print("in quick delete")
-                            self.persistent_data['duration'] = int(request.body['duration']) 
+                            if self.DEBUG:
+                                print("in quick delete")
+                            self.persistent_data['duration'] = int(request.body['duration'])
+                            self.save_persistent_data()
                             self.quick_delete_filter(self.persistent_data['duration'])
                             
                             return APIResponse(
@@ -1861,6 +1876,14 @@ class PrivacyManagerAPIHandler(APIHandler):
 
 
 
+
+
+#
+#  Quick delete thing + filter
+#
+
+
+
     # Deletes data from ALL logs for the last few minutes/hours
     def quick_delete_filter(self,duration):
         if self.DEBUG:
@@ -1882,11 +1905,46 @@ class PrivacyManagerAPIHandler(APIHandler):
                     print("quick deleting. Log_id: " + str(log_id) + ", data_type: " + str(log_data_type) + ", early_time: " + str(early_time) + ", current_time: " + str(current_time))
                 self.point_delete(log_id,log_data_type, early_time, current_time * 1000)
         
-            self.send_pairing_prompt("Deleted the last " + str(duration * 60) + " minutes of log data")
+            self.adapter.send_pairing_prompt("Deleted the last " + str(duration) + " minutes of log data")
             
         except Exception as ex:
             if self.DEBUG:
                 print("error in quick_delete_filter: " + str(ex))
+
+
+
+    def duration_name_to_int_lookup(self,duration_string):
+        if self.DEBUG:
+            print("in duration_name_to_int_lookup. String: " + str(duration_string))
+        for key, value in self.duration_lookup_table.items():
+            if value == duration_string:
+                if self.DEBUG:
+                    print("Duration reverse lookup success. Returning: " + str(key))
+                return int(key)
+        return None
+
+
+    def get_duration_names_list(self):
+        duration_names = []
+        for key, value in self.duration_lookup_table.items():
+            duration_names.append(value)
+        return duration_names
+
+
+    def thing_delete_button_pushed(self):
+        if self.DEBUG:
+            print("(())")
+            print("in thing_delete_button_pushed")
+            print("(())")
+        #self.adapter.send_pairing_prompt("Deleted the last " + "xx" + " minutes of log data")
+        self.quick_delete_filter(self.persistent_data['duration'])
+
+
+
+
+
+
+
 
 
     def run_command_with_lines(self,command):
@@ -1929,19 +1987,6 @@ class PrivacyManagerAPIHandler(APIHandler):
 
 
 
-
-        #
-        #  Handling the thing
-        #
-
-
-    def thing_delete_button_pushed(self):
-        if self.DEBUG:
-            print("(())")
-            print("in thing_delete_button_pushed")
-            print("(())")
-        #self.adapter.send_pairing_prompt("Deleted the last " + "xx" + " minutes of log data")
-        self.quick_delete_filter(self.persistent_data['duration'])
 
 
 

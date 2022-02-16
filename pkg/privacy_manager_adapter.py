@@ -79,7 +79,7 @@ class PrivacyManagerDevice(Device):
         self._id = device_name
         self.id = device_name
         self.adapter = adapter
-        self.api_handler = api_handler
+        self.api_handler = self.adapter.api_handler
         self._type.append(device_type)
         #self._type = ['OnOffSwitch']
 
@@ -93,9 +93,9 @@ class PrivacyManagerDevice(Device):
 
         #print("self.api_handler.persistent_data['enabled'] = " + str(self.api_handler.persistent_data['enabled']))
         
-        self.properties["data-deletion"] = PrivacyManagerProperty(
+        self.properties["data_deletion"] = PrivacyManagerProperty(
                             self,
-                            "data-deletion",
+                            "data_deletion",
                             {
                                 '@type': 'OnOffProperty',
                                 'title': "Data deletion",
@@ -104,22 +104,32 @@ class PrivacyManagerDevice(Device):
                             },
                             False)
 
-        """
-        self.properties["anonymous-id"] = PrivacyManagerProperty(
-                            self,
-                            "anonymous-id",
-                            {
-                                'title': "Annymous ID",
-                                'type': 'string',
-                                'readOnly': True
-                            },
-                            self.api_handler.persistent_data['uuid'])
+                            
+        
+        duration_strings_list = self.adapter.api_handler.get_duration_names_list()
+        if self.adapter.DEBUG:
+            print("Creating property. Duration_strings_list: " + str(duration_strings_list))
+        
+        duration_string = duration_strings_list[0]
+        try:
+            duration_string = self.adapter.api_handler.duration_lookup_table[ str(self.adapter.api_handler.persistent_data['duration']) ]
+            print("duration string lookup succeeded? Duration string is now: " + str(duration_string))
+        except Exception as ex:
+            print("Error looking up duration in table: " + str(ex))
 
-        """
-        #targetProperty = self.find_property('outside-access')
-        #targetProperty.update(self.api_handler.persistent_data['enabled'])
+        if self.adapter.DEBUG:
+            print("initial duration string for thing property: " + str(duration_string))
 
-        #print(str(self.properties["outside-access"]))
+        self.properties["data_deletion_duration"] = PrivacyManagerProperty(
+                        self,
+                        "data_deletion_duration",
+                        {
+                            'title': "Time span",
+                            'type': 'string',
+                            'enum': duration_strings_list  #["1 minute","10 minutes","30 minutes","1 hour","2 hours","4 hours","8 hours"]
+                        },
+                        duration_string)
+
 
 
 #
@@ -138,10 +148,11 @@ class PrivacyManagerProperty(Property):
         self.name = name
         self.title = name
         self.description = description # dictionary
-        self.value = False
-        self.set_cached_value(False)
+        self.value = value
+        self.set_cached_value(value)
         self.device.notify_property_changed(self)
-        print("privacy manager property initiated")
+        if self.device.adapter.DEBUG:
+            print("privacy manager property initiated: " + str(self.name) + ", with value: " + str(self.value))
         #self.update(value)
         #self.set_cached_value(value)
         #self.device.notify_property_changed(self)
@@ -149,11 +160,12 @@ class PrivacyManagerProperty(Property):
 
 
     def set_value(self, value):
-        print("set_value is called on a PrivacyManager property: " + str(self.name) + " With new value: " + str(value))
+        if self.device.adapter.DEBUG:
+            print("set_value is called on a PrivacyManager property: " + str(self.name) + ", with new value: " + str(value))
 
         try:
             
-            if self.name == 'data-deletion':
+            if self.name == 'data_deletion':
                 self.value = True
                 self.set_cached_value(value)
                 self.device.notify_property_changed(self)
@@ -168,6 +180,14 @@ class PrivacyManagerProperty(Property):
                 self.set_cached_value(False)
                 self.device.notify_property_changed(self)
             
+            elif self.name == 'data_deletion_duration':
+                if self.device.adapter.DEBUG:
+                    print("incoming data_deletion_duration enum string: " + str(value))
+                self.device.adapter.api_handler.persistent_data['duration'] = self.device.adapter.api_handler.duration_name_to_int_lookup(str(value))
+                if self.device.adapter.DEBUG:
+                    print("self.device.adapter.api_handler.persistent_data['duration'] is now: " + str(self.device.adapter.api_handler.persistent_data['duration']))
+                self.update(value)
+                
             else:
                 self.update(value)
             
@@ -181,7 +201,8 @@ class PrivacyManagerProperty(Property):
         
 
     def update(self, value):
-        print("privacy_manager property -> update to: " + str(value))
+        if self.device.adapter.DEBUG:
+            print("privacy_manager property -> update to: " + str(value))
         #print("--prop details: " + str(self.title) + " - " + str(self.original_property_id))
         #print("--pro device: " + str(self.device))
         if value != self.value:

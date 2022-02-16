@@ -541,13 +541,13 @@
                     }
 
                 ).then((body) => {
-                    console.log("quick delete ajax API was called succcesfully");
+                    console.log("quick delete ajax API was called succcesfully: ", body);
                     //thing_list.innerText = body['data'];
                     //this.show_internal_logs(body['data']);
 
                 }).catch((e) => {
                     //pre.innerText = e.toString();
-                    console.log("Privacy manager: error in quick delete response");
+                    console.log("Privacy manager: error in quick delete response: ", e);
                     console.log(e.toString());
                 });
 
@@ -681,6 +681,9 @@
                 //thing_list.innerText = body['data'];
                 //this.create_thing_list(body['logs']);
                 
+                
+                
+                
                 if(typeof body.debug != 'undefined'){
                     if(body.debug){
                         if(document.getElementById('extension-privacy-manager-debug-warning') != null){
@@ -688,6 +691,16 @@
                         }
                     }
                 }
+                
+                 if(typeof body.persistent != 'undefined'){
+                     this.persistent = body['persistent'];
+                     
+                     if(typeof body['persistent']['duration'] != 'undefined'){
+                         console.log("setting dropdown to duration: ", body['persistent']['duration']);
+                         document.getElementById('extension-privacy-manager-quick-delete-time-dropdown').value = body['persistent']['duration'];
+                     }
+                     
+                 }
                 
                 if(typeof body.internal_logs_auto_delete != 'undefined'){
                     //console.log("setting auto-delete internal logs preference to: " + body.internal_logs_auto_delete);
@@ -703,7 +716,7 @@
 
             }).catch((e) => {
                 //pre.innerText = e.toString();
-                console.log("Privacy manager: error in show function: ", e);
+                console.log("Privacy manager: error in show call to api/init: ", e);
             });
             
 

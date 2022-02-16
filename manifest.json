@@ -1,5 +1,5 @@
 {
-  "author": "CreateCandle",
+  "author": "CandleSmartHome.com",
   "content_scripts": [
     {
       "css": [
@@ -36,17 +36,16 @@
           "type": "boolean"
         }
       },
-      "required": [
-        "Debugging"
-      ],
+      "required": [],
       "type": "object"
     }
   },	
   "short_name": "Privacy",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
+	"images/*.png",
     "js/*.js",
     "views/*.html"
   ]

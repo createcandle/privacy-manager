@@ -14,7 +14,7 @@ jobs:
       with:
         python-version: 3.7
     - name: Upgrade pip
-      run: /opt/hostedtoolcache/Python/3.9.10/x64/bin/python3 -m pip install --upgrade pip
+      run: /opt/hostedtoolcache/Python/3.7.10/x64/bin/python3 -m pip install --upgrade pip
 #    - name: Install bluetooth dev
 #      run: sudo apt-get install libbluetooth-dev
     - name: Package project

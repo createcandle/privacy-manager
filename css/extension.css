@@ -290,10 +290,10 @@
 
 
 #extension-privacy-manager-view {
-  height: 100%; /*calc(100% - 7.6rem);*/
-  box-sizing: border-box;
-  /*overflow: auto;*/
-	overflow: scroll;
+    height: 100%; /*calc(100% - 7.6rem);*/
+    box-sizing: border-box;
+    /*overflow: auto;*/
+	overflow: auto;
 	position: absolute;
 	top: 7.6rem;
 	left: 0;

@@ -63,16 +63,21 @@ class PrivacyManagerAPIHandler(APIHandler):
         self.server = 'http://127.0.0.1:8080'
         self.DEV = False
         self.DEBUG = False
-            
+        
+        self.adapter = None    
+        
         self.things = [] # Holds all the things, updated via the API. Used to display a nicer thing name instead of the technical internal ID.
         self.data_types_lookup_table = {}
         
         self.doing_bluetooth_scan = False
         self.printer = None
         self.printer_connected = False
-        self.do_not_delete_after_printing = False
+        self.printer_connection_counter = 0
+        self.printer_contrast = 1
+        self.do_not_delete_after_printing = False # only used during development
         self.should_print_log_name = False
-        
+        self.date_string_to_print = ""
+        self.power_timeout_set = False
         
         
         self.duration_lookup_table = {'1':'1 minute',
@@ -122,6 +127,8 @@ class PrivacyManagerAPIHandler(APIHandler):
             self.persistence_file_path = os.path.join(self.user_profile['dataDir'], self.addon_name, 'persistence.json')
             self.chart_png_file_path = os.path.join(self.user_profile['dataDir'], self.addon_name, 'chart.png')
             
+            self.external_picture_drop_dir = os.path.join(self.user_profile['dataDir'], self.addon_name, 'printme')
+            
             
         except Exception as e:
             print("Failed to further init UX extension API handler: " + str(e))
@@ -161,18 +168,33 @@ class PrivacyManagerAPIHandler(APIHandler):
         if 'duration' not in self.persistent_data:
             self.persistent_data['duration'] = 30
         
+        if 'printer_log_name' not in self.persistent_data:
+            self.persistent_data['printer_log_name'] = ""
+            
+        if 'printer_contrast' not in self.persistent_data:
+            self.persistent_data['printer_contrast'] = 'medium'
+        
+        
         self.get_logs_list()
+        
+        self.connect_to_printer()
+        
+        if self.printer != None:
+            if not os.path.isdir(self.external_picture_drop_dir):
+                if self.DEBUG:
+                    print("Creating image dropoff directory")
+                os.makedirs(self.external_picture_drop_dir)
+            
+            #os.system('rm ' + str(self.external_picture_drop_dir) + '/*') # maybe a bit too dangerous
+        
         
         try:
             self.adapter = PrivacyManagerAdapter(self,verbose=False)
             #self.manager_proxy.add_api_handler(self.extension)
             if self.DEBUG:
                 print("ADAPTER created")
-            pass
         except Exception as ex:
             print("Failed to start ADAPTER. Error: " + str(ex))
-        
-        self.connect_to_printer()
         
         self.running = True
         
@@ -200,97 +222,143 @@ class PrivacyManagerAPIHandler(APIHandler):
             print("clock thread init")
         time_module.sleep(5)
         #last_run = 0
+        previous_scheduled_print_time = 0
+        #previous_printer_battery_check_time = 0
+        self.printer_connection_counter = 0
+        
         while self.running:
             #last_run = time_module.time()
             try:
                 if 'printer_interval' in self.persistent_data:
-                    my_date = datetime.now()
-                    #print("Current hour ", my_date.hour)
-                    #print("Current minute ", my_date.minute)
+                    current_datetime = datetime.now()
+                    timestamp = int(round(current_datetime.timestamp()))
+                    #print("Current hour ", current_datetime.hour)
+                    #print("Current minute ", current_datetime.minute)
                     
-                    if self.persistent_data['printer_interval'] == 'hourly':
-                        if my_date.minute == 0:
-                            if self.DEBUG:
-                                print("HOURLY IS NOW")
-                            print_result = self.print_now()
-                            #if print_result['state'] == 'error':
-                            #    self.print_now()
-                            time_module.sleep(60)
+                    if timestamp - previous_scheduled_print_time > 120:
+                        previous_scheduled_print_time = timestamp
                         
-                    if self.persistent_data['printer_interval'] == '3hourly':
-                        if my_date.minute == 0 and my_date.hour % 3 == 0:
-                            if self.DEBUG:
-                                print("3HOURLY IS NOW")
-                            print_result = self.print_now()
-                            #if print_result['state'] == 'error':
-                            #    self.print_now()
-                            time_module.sleep(60)
-                        
-                    if self.persistent_data['printer_interval'] == '6hourly':
-                        if my_date.minute == 0  and my_date.hour % 6 == 0:
-                            if self.DEBUG:
-                                print("6HOURLY IS NOW")
-                            print_result = self.print_now()
-                            #if print_result['state'] == 'error':
-                            #    self.print_now()
-                            time_module.sleep(60)
-                            
-                    if self.persistent_data['printer_interval'] == '12hourly':
-                        if my_date.minute == 0  and my_date.hour % 12 == 0:
-                            if self.DEBUG:
-                                print("12HOURLY IS NOW")
-                            print_result = self.print_now()
-                            #if print_result['state'] == 'error':
-                            #    self.print_now()
-                            time_module.sleep(60)
-                        
-                    elif self.persistent_data['printer_interval'] == 'daily':
-                        if my_date.hour == 0 and my_date.minute == 0:
-                            if self.DEBUG:
-                                print("DAILY IS NOW")
-                            print_result = self.print_now()
-                            #if print_result['state'] == 'error':
-                            #    self.print_now()
-                            time_module.sleep(60)
-                        
-                    elif self.persistent_data['printer_interval'] == 'weekly':
-                        if datetime.today().weekday() == 0 and my_date.hour == 0 and my_date.minute == 0:
-                            if self.DEBUG:
-                                print("WEEKLY IS NOW")
-                            print_result = self.print_now()
-                            #if print_result['state'] == 'error':
-                            #    self.print_now()
-                            time_module.sleep(60)
-            
-            
-                    # If internal logs should be auto-deleted, it will be attempted once per hour.
-                    if self.persistent_data['internal_logs_auto_delete'] == True and self.DEBUG == False:
-                        if my_date.minute == 3:
-                            if self.DEBUG:
-                                print("Attempting to auto-delete internal logs")
-                                
-                            delete_internal_logs_outcome = self.internal_logs("delete", "all")
-                            if isinstance(delete_internal_logs_outcome, str):
+                        if self.persistent_data['printer_interval'] == 'hourly':
+                            if current_datetime.minute == 0:
                                 if self.DEBUG:
-                                    print("Error while trying to delete internal logs: " + str(delete_internal_logs_outcome))
-                            time_module.sleep(60)
+                                    print("HOURLY IS NOW")
+                                print_result = self.print_now()
+                                #if print_result['state'] == 'error':
+                                #    self.print_now()
+                                #time_module.sleep(60)
+                        
+                        if self.persistent_data['printer_interval'] == '3hourly':
+                            if current_datetime.minute == 0 and current_datetime.hour % 3 == 0:
+                                if self.DEBUG:
+                                    print("3HOURLY IS NOW")
+                                print_result = self.print_now()
+                                #if print_result['state'] == 'error':
+                                #    self.print_now()
+                                #time_module.sleep(60)
+                        
+                        if self.persistent_data['printer_interval'] == '6hourly':
+                            if current_datetime.minute == 0  and current_datetime.hour % 6 == 0:
+                                if self.DEBUG:
+                                    print("6HOURLY IS NOW")
+                                print_result = self.print_now()
+                                #if print_result['state'] == 'error':
+                                #    self.print_now()
+                                #time_module.sleep(60)
+                            
+                        if self.persistent_data['printer_interval'] == '12hourly':
+                            if current_datetime.minute == 0  and current_datetime.hour % 12 == 0:
+                                if self.DEBUG:
+                                    print("12HOURLY IS NOW")
+                                print_result = self.print_now()
+                                #if print_result['state'] == 'error':
+                                #    self.print_now()
+                                #time_module.sleep(60)
+                        
+                        elif self.persistent_data['printer_interval'] == 'daily':
+                            if current_datetime.hour == 0 and current_datetime.minute == 0:
+                                if self.DEBUG:
+                                    print("DAILY IS NOW")
+                                print_result = self.print_now()
+                                #if print_result['state'] == 'error':
+                                #    self.print_now()
+                                #time_module.sleep(60)
+                        
+                        elif self.persistent_data['printer_interval'] == 'weekly':
+                            if datetime.today().weekday() == 0 and current_datetime.hour == 0 and current_datetime.minute == 0:
+                                if self.DEBUG:
+                                    print("WEEKLY IS NOW")
+                                print_result = self.print_now()
+                                #if print_result['state'] == 'error':
+                                #    self.print_now()
+                                #time_module.sleep(60)
+            
+            
+                        # If internal logs should be auto-deleted, it will be attempted once per hour.
+                        if self.persistent_data['internal_logs_auto_delete'] == True and self.DEBUG == False:
+                            if current_datetime.minute == 3:
+                                if self.DEBUG:
+                                    print("Attempting to auto-delete internal logs")
+                                
+                                delete_internal_logs_outcome = self.internal_logs("delete", "all")
+                                if isinstance(delete_internal_logs_outcome, str):
+                                    if self.DEBUG:
+                                        print("Error while trying to delete internal logs: " + str(delete_internal_logs_outcome))
+                                #time_module.sleep(60)
                             
             
             except Exception as ex:
                 print("error in clock thread: " + str(ex))
             
             #print("clock zzz")
-            time_module.sleep(31)
+            time_module.sleep(1)
+            
+            # Keep bluetooth connection to printer alive
             try:
                 if self.printer != None:
                     if self.printer_connected:
-                        self.printer_battery_level = self.printer.getDeviceBattery()
+                        self.printer_connection_counter += 1
+                        #if timestamp - previous_printer_battery_check_time > 30:
+                        if self.printer_connection_counter > 28:
+                            if self.DEBUG:
+                                print("requesting battery level from printer to keep it awake")
+                            self.printer_connection_counter = 0
+                            self.printer_battery_level = self.printer.getDeviceBattery()
+                            try:
+                                if 'printer_battery' in self.adapter.thing.properties:
+                                    self.adapter.thing.properties['printer_battery'].update(int(self.printer_battery_level))
+                            except Exception as ex:
+                                print("error updating battery level on thing: " + str(ex))
+                            
+                            
+                            
                         #if self.DEBUG:
                         #    print(f'Printer battery level: {self.printer_battery_level}%')
             except Exception as ex:
                 if self.DEBUG:
                     print("Error with periodic connnection upkeep to printer: " + str(ex))
                     self.printer_connected = False
+
+                    
+            # print any picture that appears
+            try:
+                if self.printer != None:
+                    if self.persistent_data['printer_mac'] != '':
+                        
+                        with os.scandir(self.external_picture_drop_dir) as files:
+                            for item in files:
+                                if item.is_file():
+                                    filename = os.path.join(self.external_picture_drop_dir, str(item.name))
+                                    if self.DEBUG:
+                                        print(" picture(s) spotted in the external drop-off location: " + str(filename))
+                                    self.print_image_file(filename)
+                                    time_module.sleep(10)
+                                    break
+                            
+                        
+            except Exception as ex:
+                if self.DEBUG:
+                    print("Error with periodic connnection upkeep to printer: " + str(ex))
+            
 
 
     # Read the settings from the add-on settings page
@@ -360,6 +428,9 @@ class PrivacyManagerAPIHandler(APIHandler):
                             self.persistent_data['duration'] = int(request.body['duration'])
                             self.save_persistent_data()
                             self.quick_delete_filter(self.persistent_data['duration'])
+                            
+                            # set duration on thing too
+                            self.adapter.thing.properties["data_deletion_duration"].update(self.persistent_data['duration'])
                             
                             return APIResponse(
                               status=200,
@@ -1178,146 +1249,6 @@ class PrivacyManagerAPIHandler(APIHandler):
                     
                     if log_data_length > 1:
                         
-                        # Define Data
-
-                        #x= [1, 2, 3, 4, 5]
-                        #y= [2.5, 6.3, 12, 14, 2]
-
-                        # Plot 
-
-                        #plt.plot(x,y,color='r')
-                        #plt.plot()
-                        
-                        """
-                        secs = [x['date'] for x in log_data]
-                        vals = [x['value'] for x in log_data]
-                        print("seconds:")
-                        print(str(secs))
-                        
-                        print(" ")
-                        print("values:")
-                        print(str(vals))
-                        """
-                        
-                        #plt.plot(secs, vals)
-                        
-                        
-                        #plt.plot(log_data.date, log_data.value)
-
-                        # Save image as png
-
-                        #plt.savefig(self.chart_png_file_path)
-                        
-                        
-                        
-                        """
-                        
-                        custom_style = Style(
-                          background='transparent',
-                          plot_background='transparent',
-                          foreground='#53E89B',
-                          foreground_strong='#53A0E8',
-                          foreground_subtle='#630C0D',
-                          opacity='.6',
-                          opacity_hover='.9',
-                          transition='400ms ease-in',
-                          colors=('#E853A0', '#E8537A', '#E95355', '#E87653', '#E89B53'))
-
-                        chart = pygal.StackedLine(fill=True, interpolate='cubic', style=custom_style)
-                        chart.add('A', [1, 3,  5, 16, 13, 3,  7])
-                        chart.add('B', [5, 2,  3,  2,  5, 7, 17])
-                        chart.add('C', [6, 10, 9,  7,  3, 1,  0])
-                        chart.add('D', [2,  3, 5,  9, 12, 9,  5])
-                        chart.add('E', [7,  4, 2,  1,  2, 10, 0])
-                        chart.render()
-                        
-                        print("ok, demo worked")
-                        
-                        
-                        custom_style = Style(
-                          background='transparent',
-                          plot_background='transparent',
-                          foreground='#53E89B',
-                          foreground_strong='#000000',
-                          foreground_subtle='#666666',
-                          opacity='1',
-                          title_font_size='36',
-                          label_font_size='16',
-                          major_label_font_size='24',
-                          value_font_size='24',
-                          value_label_font_size='24',
-                          colors=('#000000', '#333333', '#666666', '#999999', '#CCCCCC'))
-                        
-                        
-                        custom_style = Style(
-                          background='#fff',
-                          plot_background='transparent',
-                          opacity='1',
-                          value_label_font_size='24')
-                        
-                        #line_chart = pygal.Line(style=custom_style)
-                        line_chart = pygal.DateLine()
-                        
-                        line_chart.title = self.persistent_data['printer_log_name']
-                        
-                        if self.persistent_data['printer_interval'] == 'none':
-                            print("interval is none! Should not continue")
-                            return {'state':'error','message':'interval is disabled'}
-                        
-                        elif self.persistent_data['printer_interval'] == 'hourly':
-                            print("HOUR: " + str( time.strftime("%H") ))
-                            
-                            current_hour = int(time.strftime("%H"))
-                            previous_hour = current_hour - 1
-                            if current_hour == 0:
-                                previous_hour = 23
-                                
-                            print(str(current_hour))
-                            print(str(previous_hour))
-                            line_chart.x_labels = [str(previous_hour), ':15', ':30',':45', str(current_hour)] #map(str, range(2002, 2013))
-                            
-                        elif self.persistent_data['printer_interval'] == 'daily':
-                            line_chart.x_labels = map(str, range(0, 24))
-                            
-                        elif self.persistent_data['printer_interval'] == 'weekly':
-                            line_chart.x_labels = ['m','t','w','t','f','s','s']
-                        
-                        #line_chart.x_labels = [] #map(str, range(2002, 2013))
-                        
-                        #counter = 0
-                        #start = "start"
-                        #end = "end"
-                        values = []
-                        for log_item in log_data:
-                            #print(str(log_item))
-                            date = log_item['date']
-                            value = log_item['value']
-                            #print(str(date) + " -> " + str(value))
-                            values.append(value)
-                            #if counter == 0:
-                            #    start = date
-                            
-                        
-                        print("log data parsed into array : " + str(values))
-                            
-                        line_chart.add('y', values, dots_size=4)
-                        print("values added to pygal")
-                        #line_chart.add('Chrome',  [None, None, None, None, None, None,    0,  3.9, 10.8, 23.8, 35.3])
-                        #line_chart.add('IE',      [85.8, 84.6, 84.7, 74.5,   66, 58.6, 54.7, 44.8, 36.2, 26.6, 20.1])
-                        #line_chart.add('Others',  [14.2, 15.4, 15.3,  8.9,    9, 10.4,  8.9,  5.8,  6.7,  6.8,  7.5])
-                        line_chart.render()
-                        print("linechart render done?!")
-                        
-                        line_chart.render_to_png(self.chart_png_file_path)
-                        """
-                        
-                        
-                        
-                        
-                        
-                        
-                        #print("full log_data: " + str(log_data))
-                        
                         
                         # Prune to log data if it's too much to create a davaviz from.
                         pruned_log_data = []
@@ -1349,7 +1280,7 @@ class PrivacyManagerAPIHandler(APIHandler):
                                 print("pruned log length: " + str(log_data_length))
                         
                         
-                        date_string_to_print = "" # a single line of text printed above the image, or as part of the image
+                        self.date_string_to_print = "" # a single line of text printed above the image, or as part of the image
                         
                         counter = 0
                         values = []
@@ -1403,21 +1334,7 @@ class PrivacyManagerAPIHandler(APIHandler):
                             
                             counter += 1
                             
-                        #print("time_objects_pruned length: " + str(len(time_objects_pruned)))
-                        
-                        
                             
-                        #some_list = []
-                        #some_list.append((a, b))
-                        #print("new values: " + str(values))
-                        
-                        
-                        # pygal.graph.time.seconds_to_time
-
-                        #if self.DEBUG:
-                        #    print("amount of values to print: " + str(len(values)))
-                        
-                        
                         #x_label_rotation = 45
                         
                         # How wide should the image be to accomodate all the data points?
@@ -1535,8 +1452,8 @@ class PrivacyManagerAPIHandler(APIHandler):
                                 
                                 #dateline.x_labels = [datetime.fromtimestamp(log_start_timestamp), datetime.fromtimestamp(log_end_timestamp)] #map(str, range(2002, 2013))
                                 
-                                date_string_to_print = current_hour + "h  -  " + current_hour + "h"
-                                dateline.x_title = date_string_to_print
+                                self.date_string_to_print = current_hour + "h  -  " + current_hour + "h"
+                                dateline.x_title = self.date_string_to_print
                                 
                                 
                                 right_now = datetime.now()
@@ -1561,7 +1478,7 @@ class PrivacyManagerAPIHandler(APIHandler):
                                 try:
                                     today = date.today()
                                     yesterday = today - timedelta(days = 1)
-                                    date_string_to_print = yesterday.strftime("%d %B, %Y") #.strftime("%Y%m%d")
+                                    self.date_string_to_print = yesterday.strftime("%d %B, %Y") #.strftime("%Y%m%d")
                                 except Exception as ex:
                                     print("error creating daily date string")
                             
@@ -1573,7 +1490,7 @@ class PrivacyManagerAPIHandler(APIHandler):
                                 try:
                                     today = date.today()
                                     week_ago = today - timedelta(days = 7)
-                                    date_string_to_print = week_ago.strftime("%d %B, %Y") + "  ->  " + yesterday.strftime("%d %B, %Y") #.strftime("%Y%m%d")
+                                    self.date_string_to_print = week_ago.strftime("%d %B, %Y") + "  ->  " + yesterday.strftime("%d %B, %Y") #.strftime("%Y%m%d")
                                 except Exception as ex:
                                     print("error creating weekly date string")
                             
@@ -1604,11 +1521,11 @@ class PrivacyManagerAPIHandler(APIHandler):
                             dateline.show_minor_x_labels = False # in the end decided to mostly just print the date and time above the image, it's simpler and takes less space.
                             
                             if delta_minutes < 1441:
-                                date_string_to_print = log_start_date.strftime("%d %B, %Y -   %H:%M") + "  to  " + log_end_date.strftime("%H:%M") + ""
-                                #dateline.x_title = date_string_to_print
-                                #date_string_to_print = ""
+                                self.date_string_to_print = log_start_date.strftime("%d %B, %Y -   %H:%M") + "  to  " + log_end_date.strftime("%H:%M") + ""
+                                #dateline.x_title = self.date_string_to_print
+                                #self.date_string_to_print = ""
                             else:
-                                date_string_to_print = log_start_date.strftime("%H:%M  %d %B, %Y") + "  to  " + log_end_date.strftime("%H:%M  %d %B, %Y ") + ""
+                                self.date_string_to_print = log_start_date.strftime("%H:%M  %d %B, %Y") + "  to  " + log_end_date.strftime("%H:%M  %d %B, %Y ") + ""
                                                    
                                 
                                 
@@ -1666,26 +1583,6 @@ class PrivacyManagerAPIHandler(APIHandler):
                         
 
                         
-                        
-                        
-                        """
-                        dateline.x_labels = [
-                                date(2014, 1, 1),
-                                date(2014, 3, 1),
-                                date(2014, 5, 1),
-                                date(2014, 7, 1),
-                                date(2014, 9, 1),
-                                date(2014, 11, 1),
-                                date(2014, 12, 31)
-                        ]
-                        """
-                        #print("next, adding time pairs")
-                        #dateline.add('Time', [
-                        #        (1389830399, 400),
-                        #        (1402826470, 450),
-                        #        (1420029285, 500)])
-                        #dateline.add('',values) #, dots_size=4)
-
 
                         dateline.margin_top = 0
                         dateline.margin_right = 0
@@ -1696,77 +1593,33 @@ class PrivacyManagerAPIHandler(APIHandler):
                         #time.sleep(.1)
                         
                         if os.path.exists(self.chart_png_file_path) is False:
+                            if self.DEBUG:
+                                print("Error: chart image file was not generated")
                             return {'state':'error','message':'The image to be printed could not be generated'}
                         
                         
-                        
-                        if self.DEBUG:
-                            print("DateLine dataviz generated. Attempting to (re)connect to printer")
-                        if self.printer.isConnected() == False:
-                            self.connect_to_printer()
-                        
-                        if self.printer.isConnected():
-                            if self.DEBUG:
-                                print("print_now: printer is connected!")
-                            
-                            #print(f'Full: {printer.getDeviceFull()}')
-                            
-                            self.printer.setConcentration(2)
-                            
-                            img = None
-                            
-                            try:
-                                img = Image.open(self.chart_png_file_path).convert('RGBA')
-                                
-                                
-                                
-                                if self.DEBUG:
-                                    print("rotation preference was: " + str(self.persistent_data['printer_rotation']))
-                                    print("actual print rotation: " + str(print_rotation))
-                                
-                                if print_rotation != 0:
-                                    if self.DEBUG:
-                                        print("rotating image")
-                                    img2 = img.rotate(print_rotation, expand=True)
-                                else:
-                                    img2 = img
-                                        
-                            except Exception as ex:
-                                print('Error rotating image: ' + str(ex))
-    
-                                
-                                
-                            # check if image exists.
-                                
-        
-                            if date_string_to_print != "":
-                                self.printer.writeASCII(date_string_to_print + '\n')
-        
-                            if self.DEBUG:
-                                print("Printing log image now")
-                            self.printer.printImage(img2, resample=Image.ANTIALIAS)
-                            
-                            if self.DEBUG:
-                                print("printing break")
-                            self.printer.printBreak(100)
-                            
-                            if self.do_not_delete_after_printing == False: # and self.DEBUG == False:
-                                if self.DEBUG:
-                                    print("about to delete data, since print was successful (if the paper hasn't run out...)")                                
-                                self.point_delete(self.persistent_data['printer_log'],log_data_type,0, print_time * 1000 ) # deletes all data in the log
-                            
-                                try:
-                                    os.remove(self.chart_png_file_path)
-                                except Exception as ex:
-                                    if self.DEBUG:
-                                        print("Warning, could not delete generated image:" + str(ex))
-                            
-                            return {'state':'ok','message':'Log was printed'}
-                            
                         else:
                             if self.DEBUG:
-                                print("print_now: error, not connected to printer")
-                            return {'state':'error','message':'Could not connect to printer'}
+                                print("DateLine dataviz generated.")
+                                
+                            printed = self.print_image_file(self.chart_png_file_path, print_rotation)
+                            
+                            if printed:
+                                if self.DEBUG:
+                                    print("Graph was printed. Deleting data points.")
+                                if self.do_not_delete_after_printing == False:
+                                    if self.DEBUG:
+                                        print("about to delete data, since print was successful (if the paper hasn't run out...)")
+                                    self.point_delete(self.persistent_data['printer_log'],log_data_type,0, print_time * 1000 ) # deletes all data in the log
+                                 # and self.DEBUG == False:
+                                
+                                return {'state':'ok','message':'Log was printed'}                                   
+                                
+                            else:
+                                if self.DEBUG:
+                                    print("Graph was NOT printed")
+                                return {'state':'error','message':'Could not connect to printer'}
+                                
                         
                     elif log_data_length == 1:
                         print("only one data point in this period")
@@ -1802,8 +1655,11 @@ class PrivacyManagerAPIHandler(APIHandler):
             print("in connect_to_printer")
         try:
             if self.printer == None and self.persistent_data['printer_mac'] != '':
-                print("creating printer object with mac: " + str(self.persistent_data['printer_mac']))
+                if self.DEBUG:
+                    print("creating printer object with mac: " + str(self.persistent_data['printer_mac']))
                 self.printer = ppa6.Printer(self.persistent_data['printer_mac'], ppa6.PrinterType.A6p)
+                
+                #self.printer.setTimeout(8) # seconds for bluetooth connection timeout
                 
             if self.printer != None:
                 if self.DEBUG:
@@ -1814,18 +1670,25 @@ class PrivacyManagerAPIHandler(APIHandler):
                     try:
                         self.printer.reconnect()
                         self.printer.reset()
-                    except:
+                    except Exception as ex:
                         if self.DEBUG:
-                            print("printer.reconnect didn't work, trying connect instead")
+                            print("printer.reconnect didn't work, trying connect instead. Error: " + str(ex))
                         try:
                             self.printer.connect()
                             self.printer.reset()
-                        except:
+                        except Exception as ex:
                             if self.DEBUG:
-                                print("printer.reconnect also didn't work")
+                                print("printer.reconnect also didn't work. Error: " + str(ex))
                         
                 if self.printer.isConnected():
+                    if self.power_timeout_set == False:
+                        self.power_timeout_set = True
+                        self.printer.setPowerTimeout(300) # minutes. Tells device to stay awake. 300 minutes = 5 hours
+                        os.system('sudo bluetoothctl trust ' + str(self.persistent_data['printer_mac']))
+                        
+                        
                     self.printer_connected = True
+                    self.printer_connection_counter = 0
                     if self.DEBUG:
                         print(f'Name: {self.printer.getDeviceName()}')
                         print(f'S/N: {self.printer.getDeviceSerialNumber()}')
@@ -1836,6 +1699,10 @@ class PrivacyManagerAPIHandler(APIHandler):
                 else:
                     print("ERROR, was unable to (re)connect to the printer")
                     self.printer_connected = False
+                
+                if self.adapter != None:
+                    if 'printer_connected' in self.adapter.thing.properties:
+                        self.adapter.thing.properties['printer_connected'].update(self.printer_connected)
                     
             else:
                 if self.DEBUG:
@@ -1844,6 +1711,88 @@ class PrivacyManagerAPIHandler(APIHandler):
         except Exception as ex:
             print("error setting up printer: " + str(ex))
 
+
+
+
+    def print_image_file(self,filename, print_rotation=0):
+        try:
+            if self.printer.isConnected() == False:
+                if self.DEBUG:
+                    print("Print_image_file: attempting to (re)connect to printer")
+                self.connect_to_printer()
+        
+            if self.printer.isConnected():
+                if self.DEBUG:
+                    print("print_now: printer is connected!")
+                try:
+                    #print(f'Full: {printer.getDeviceFull()}')
+                    self.printer_connection_counter = 0
+                    
+                    printer_contrast_number = 2
+                    if self.persistent_data['printer_contrast'] == 'medium':
+                        printer_contrast_number = 1
+                    elif self.persistent_data['printer_contrast'] == 'low':
+                        printer_contrast_number = 0
+                    self.printer.setConcentration(printer_contrast_number)
+            
+            
+                    img = None
+            
+                    try:
+                        img = Image.open(filename).convert('RGBA') #self.chart_png_file_path
+                
+                        if self.DEBUG:
+                            print("rotation preference was: " + str(self.persistent_data['printer_rotation']))
+                            print("actual print rotation: " + str(print_rotation))
+                
+                        if print_rotation != 0:
+                            if self.DEBUG:
+                                print("rotating image")
+                            img2 = img.rotate(print_rotation, expand=True)
+                        else:
+                            img2 = img
+                        
+                    except Exception as ex:
+                        print('Error rotating image: ' + str(ex))
+
+                    # check if image exists.
+            
+                    if self.date_string_to_print != "":
+                        self.printer.writeASCII(self.date_string_to_print + '\n')
+                        self.date_string_to_print = ""
+                
+                    if self.DEBUG:
+                        print("Printing log image now")
+                    self.printer.printImage(img2, resample=Image.ANTIALIAS)
+            
+                    if self.DEBUG:
+                        print("printing break")
+                    self.printer.printBreak(100)
+                    
+                except Exception as ex:
+                    if self.DEBUG:
+                        print("Error rotating and printing: " + str(ex))
+            
+                try:
+                    os.remove(filename)
+                    if self.DEBUG:
+                        print("printed file has been deleted: " + str(filename))
+                        
+                except Exception as ex:
+                    if self.DEBUG:
+                        print("Warning, could not delete generated image:" + str(ex))
+            
+                return True
+            
+            else:
+                if self.DEBUG:
+                    print("print_now: error, not connected to printer")
+                return False
+                
+        except Exception as ex:
+            print("Error in print_image_file: " + str(ex))
+            return False
+            
 
 
     def save_persistent_data(self):
@@ -1881,8 +1830,6 @@ class PrivacyManagerAPIHandler(APIHandler):
 #
 #  Quick delete thing + filter
 #
-
-
 
     # Deletes data from ALL logs for the last few minutes/hours
     def quick_delete_filter(self,duration):
@@ -1933,9 +1880,7 @@ class PrivacyManagerAPIHandler(APIHandler):
 
     def thing_delete_button_pushed(self):
         if self.DEBUG:
-            print("(())")
             print("in thing_delete_button_pushed")
-            print("(())")
         #self.adapter.send_pairing_prompt("Deleted the last " + "xx" + " minutes of log data")
         self.quick_delete_filter(self.persistent_data['duration'])
 
@@ -1979,14 +1924,6 @@ class PrivacyManagerAPIHandler(APIHandler):
         except Exception as ex:
             print("Error running shell command: " + str(ex))
     
-
-
-
-
-
-
-
-
 
 
 

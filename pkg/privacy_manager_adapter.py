@@ -131,6 +131,42 @@ class PrivacyManagerDevice(Device):
                         duration_string)
 
 
+        if self.api_handler.persistent_data['printer_mac'] != '':
+            self.properties["printer_connected"] = PrivacyManagerProperty(
+                            self,
+                            "printer_connected",
+                            {
+                                'title': "Printer state",
+                                'type': 'boolean',
+                                'readOnly': True
+                            },
+                            self.api_handler.printer_connected)
+
+            self.properties["printer_battery"] = PrivacyManagerProperty(
+                            self,
+                            "printer_battery",
+                            {
+                                'title': "Printer battery level",
+                                'type': 'integer',
+                                'minimum': 0,
+                                'maximum': 100,
+                                'unit': 'percent',
+                                'readOnly': True
+                            },
+                            self.api_handler.printer_connected)
+
+            
+            self.properties["printer_contrast"] = PrivacyManagerProperty(
+                            self,
+                            "printer_contrast",
+                            {
+                                'title': "Printer contrast",
+                                'type': 'string',
+                                'enum': ['low','medium','high']
+                            },
+                            self.api_handler.persistent_data['printer_contrast'])
+            
+
 
 #
 #  PROPERTY
@@ -187,6 +223,12 @@ class PrivacyManagerProperty(Property):
                 if self.device.adapter.DEBUG:
                     print("self.device.adapter.api_handler.persistent_data['duration'] is now: " + str(self.device.adapter.api_handler.persistent_data['duration']))
                 self.update(value)
+                
+            elif self.name == 'printer_contrast':
+                options = ['low','medium','high']
+                if str(value) in options:
+                    self.device.adapter.api_handler.persistent_data['printer_contrast'] = str(value)
+                    self.update(value)
                 
             else:
                 self.update(value)

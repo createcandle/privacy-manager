@@ -221,6 +221,24 @@
 
 /*  PRINTER  */
 
+
+#extension-privacy-manager-pp-header{
+    width: 40%;
+    margin: 0 auto;
+    display: block;
+}
+
+
+
+.extension-privacy-manager-show-if-printer-connected{
+    display:none;
+}
+
+.extension-privacy-manager-printer-connected .extension-privacy-manager-show-if-printer-connected{
+    display:initial;
+}
+
+
 #extension-privacy-manager-printer-connected{
     display:inline-block;
     padding: 0 .5rem;
@@ -253,6 +271,7 @@
 #extension-privacy-manager-print-test-button,
 #extension-privacy-manager-start-bluetooth-scan-button{
     margin-left:1rem;
+    display:none;
 }
 
 
@@ -272,6 +291,23 @@
 }
 
 
+#extension-privacy-manager-printable-icons-list{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+}
+
+#extension-privacy-manager-printable-icons-list img{
+    width:200px;
+    max-width:50%;
+    margin:1rem;
+    cursor:pointer;
+    opacity:.9;
+}
+
+#extension-privacy-manager-printable-icons-list img:hover{
+    opacity:1;
+}
 
 
 

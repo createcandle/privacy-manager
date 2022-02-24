@@ -68,18 +68,6 @@ class PrivacyManagerAPIHandler(APIHandler):
         
         self.things = [] # Holds all the things, updated via the API. Used to display a nicer thing name instead of the technical internal ID.
         self.data_types_lookup_table = {}
-        
-        self.doing_bluetooth_scan = False
-        self.printer = None
-        self.printer_connected = False
-        self.printer_connection_counter = 0
-        self.printer_contrast = 1
-        self.do_not_delete_after_printing = False # only used during development
-        self.should_print_log_name = False
-        self.date_string_to_print = ""
-        self.power_timeout_set = False
-        
-        
         self.duration_lookup_table = {'1':'1 minute',
                                     '10':'10 minutes',
                                     '20':'20 minutes',
@@ -88,9 +76,23 @@ class PrivacyManagerAPIHandler(APIHandler):
                                     '240':'4 hours',
                                     '480':'8 hours',
                                 }
+                                
+        # printer
+        self.doing_bluetooth_scan = False
+        self.printer = None
+        self.busy_connecting_to_printer = False
+        self.printer_connected = False
+        self.printer_connection_counter = 0
+        self.printer_contrast = 1
+        self.do_not_delete_after_printing = False # only used during development
+        self.should_print_log_name = False
+        self.date_string_to_print = ""
+        self.power_timeout_set = False
+        self.last_printer_check_time = 0
+        self.printer_disconnected_counter = 0
+        self.printer_disconnected_retry_delay = 30 # can be as low as 30 seconds initially, then slowly grows to about 10 minutes between reconnect attempts
         
         
-        #print(str( time(11, 59, 59) ))
         
         try:
             manifest_fname = os.path.join(
@@ -143,6 +145,7 @@ class PrivacyManagerAPIHandler(APIHandler):
         
         self.persistent_data = {'printer_mac':'', 'printer_name':'','internal_logs_auto_delete':True}
         
+        should_save_persistent_data = False
         # Get persistent data
         try:
             with open(self.persistence_file_path) as f:
@@ -151,29 +154,38 @@ class PrivacyManagerAPIHandler(APIHandler):
                 if self.DEBUG:
                     print("Persistence data was loaded succesfully.")
                     
-                if 'printer_mac' not in self.persistent_data:
-                    if self.DEBUG:
-                        print("printer_mac was not in persistent data, adding it now.")
-                    self.persistent_data['printer_mac'] = ''
-                    self.persistent_data['printer_name'] = ''
-                    self.save_persistent_data()
-
-                if 'internal_logs_auto_delete' not in self.persistent_data:
-                    self.persistent_data['internal_logs_auto_delete'] = True
+                
 
         except:
             print("Could not load persistent data (if you just installed the add-on then this is normal)")
-            self.save_persistent_data()
+            self.persistent_data = {'printer_mac':'', 'printer_name':'','internal_logs_auto_delete':True}
+            should_save_persistent_data = True
+        
+        if 'printer_mac' not in self.persistent_data:
+            if self.DEBUG:
+                print("printer_mac was not in persistent data, adding it now.")
+            self.persistent_data['printer_mac'] = ''
+            self.persistent_data['printer_name'] = ''
+            should_save_persistent_data = True
+
+        if 'internal_logs_auto_delete' not in self.persistent_data:
+            self.persistent_data['internal_logs_auto_delete'] = True
+            should_save_persistent_data = True
         
         if 'duration' not in self.persistent_data:
             self.persistent_data['duration'] = 30
+            should_save_persistent_data = True
         
         if 'printer_log_name' not in self.persistent_data:
             self.persistent_data['printer_log_name'] = ""
+            should_save_persistent_data = True
             
         if 'printer_contrast' not in self.persistent_data:
             self.persistent_data['printer_contrast'] = 'medium'
+            should_save_persistent_data = True
         
+        if should_save_persistent_data:
+            self.save_persistent_data()
         
         self.get_logs_list()
         
@@ -224,7 +236,7 @@ class PrivacyManagerAPIHandler(APIHandler):
         #last_run = 0
         previous_scheduled_print_time = 0
         #previous_printer_battery_check_time = 0
-        self.printer_connection_counter = 0
+        #self.printer_connection_counter = 0
         
         while self.running:
             #last_run = time_module.time()
@@ -313,30 +325,45 @@ class PrivacyManagerAPIHandler(APIHandler):
             time_module.sleep(1)
             
             # Keep bluetooth connection to printer alive
-            try:
-                if self.printer != None:
-                    if self.printer_connected:
-                        self.printer_connection_counter += 1
-                        #if timestamp - previous_printer_battery_check_time > 30:
-                        if self.printer_connection_counter > 28:
-                            if self.DEBUG:
-                                print("requesting battery level from printer to keep it awake")
-                            self.printer_connection_counter = 0
-                            self.printer_battery_level = self.printer.getDeviceBattery()
-                            try:
-                                if 'printer_battery' in self.adapter.thing.properties:
-                                    self.adapter.thing.properties['printer_battery'].update(int(self.printer_battery_level))
-                            except Exception as ex:
-                                print("error updating battery level on thing: " + str(ex))
-                            
+            if not self.busy_connecting_to_printer:
+                try:
+                    if self.printer != None:
+                        if self.printer_connected:
+                            self.printer_connection_counter += 1
+                            self.printer_disconnected_retry_delay = 30
+                            #if timestamp - previous_printer_battery_check_time > 30:
+                            if self.printer_connection_counter > 28:
+                                if self.DEBUG:
+                                    print("requesting battery level from printer to keep it awake")
+                                self.printer_connection_counter = 0
+                                self.printer_battery_level = self.printer.getDeviceBattery()
+                                if self.DEBUG:
+                                    print("self.printer_battery_level: " + str(self.printer_battery_level))
+                                try:
+                                    if 'printer_battery' in self.adapter.thing.properties:
+                                        self.adapter.thing.properties['printer_battery'].update(int(self.printer_battery_level))
+                                except Exception as ex:
+                                    print("error updating battery level on thing: " + str(ex))
+                        else:
+                            self.printer_disconnected_counter += 1
+                            if self.printer_disconnected_counter > self.printer_disconnected_retry_delay:
+                                self.printer_disconnected_counter = 0
+                                if self.print_test():
+                                    if self.DEBUG:
+                                        print("Clock: succesfully reconnected to printer")
+                                    else:
+                                        if self.printer_disconnected_retry_delay < 600:
+                                            self.printer_disconnected_retry_delay += 60
+                                        if self.DEBUG:
+                                            print("Clock: could not reconnect to printer")
                             
                             
                         #if self.DEBUG:
                         #    print(f'Printer battery level: {self.printer_battery_level}%')
-            except Exception as ex:
-                if self.DEBUG:
-                    print("Error with periodic connnection upkeep to printer: " + str(ex))
-                    self.printer_connected = False
+                except Exception as ex:
+                    if self.DEBUG:
+                        print("Error with periodic connnection upkeep to printer: " + str(ex))
+                    #self.printer_connected = False
 
                     
             # print any picture that appears
@@ -409,7 +436,7 @@ class PrivacyManagerAPIHandler(APIHandler):
                 print("warning, Privacy Manager API received a GET request")
                 return APIResponse(status=404)
             
-            if request.path == '/ajax' or request.path == '/get_property_data' or request.path == '/point_change_value' or request.path == '/point_delete' or request.path == '/internal_logs' or request.path == '/init' or request.path == '/sculptor_init' or request.path == '/printer_init' or request.path == '/printer_scan' or request.path == '/printer_set' or request.path == '/print_now' or request.path == '/print_test':
+            if request.path == '/ajax' or request.path == '/get_property_data' or request.path == '/point_change_value' or request.path == '/point_delete' or request.path == '/internal_logs' or request.path == '/init' or request.path == '/sculptor_init' or request.path == '/printer_init' or request.path == '/printer_scan' or request.path == '/printer_set' or request.path == '/print_now' or request.path == '/print_test' or request.path == '/print_image':
 
                 try:
                     if request.path == '/ajax':
@@ -593,6 +620,41 @@ class PrivacyManagerAPIHandler(APIHandler):
                               content_type='application/json',
                               content=json.dumps({'state': 'error', 'message':'Error while doing test print: ' + str(ex)}),
                             )
+                    
+                    
+                    elif request.path == '/print_image':
+                        try:
+                            state = 'ok'
+                            if self.DEBUG:
+                                print("REQUEST TO PRINT ICON")
+                            
+                            if 'filename' in request.body:
+                                filename = request.body['filename']
+                                icon_path =  os.path.join(self.addon_path, 'images', filename)
+                                if os.path.isfile(icon_path) and os.path.isdir(self.external_picture_drop_dir):
+                                    destination_path =  os.path.join(self.external_picture_drop_dir, filename)
+                                    copy_command = 'cp ' + str(icon_path) + ' ' + destination_path
+                                    if self.DEBUG:
+                                        print("copying icon to drop-off dir. Copy command: " + str(copy_command))
+                                    os.system(copy_command)
+                                else:
+                                    state = 'error'
+                            else:
+                                state = 'error'
+                            
+                            return APIResponse(
+                              status=200,
+                              content_type='application/json',
+                              content=json.dumps({'state' : state}),
+                            )
+                        except Exception as ex:
+                            print("Error in /print_now: " + str(ex))
+                            return APIResponse(
+                              status=500,
+                              content_type='application/json',
+                              content=json.dumps({'state': 'error', 'message':'Error while doing test print: ' + str(ex)}),
+                            )
+                    
                     
                     
                     
@@ -1147,6 +1209,8 @@ class PrivacyManagerAPIHandler(APIHandler):
         result = False
         try:
             command = "sudo hcitool scan"
+            # TODO: add timeout? Switch to bluetoothctl?
+            #sudo timeout -s SIGINT 5s hcitool -i hci0 lescan > file.txt
             
             for line in self.run_command_with_lines(command):
                 line = line.lower().strip()
@@ -1653,6 +1717,13 @@ class PrivacyManagerAPIHandler(APIHandler):
     def connect_to_printer(self):
         if self.DEBUG:
             print("in connect_to_printer")
+            
+        self.busy_connecting_to_printer = True
+        if time_module.time() - self.last_printer_check_time < 5:
+            if self.DEBUG:
+                print("connected check was already recently performed, skipping doing it again.")
+            return self.printer_connected
+            
         try:
             if self.printer == None and self.persistent_data['printer_mac'] != '':
                 if self.DEBUG:
@@ -1664,7 +1735,10 @@ class PrivacyManagerAPIHandler(APIHandler):
             if self.printer != None:
                 if self.DEBUG:
                     print("printer object exists")
-                if self.printer.isConnected() == False:
+                self.printer_connected = self.printer.isConnected()
+                if self.DEBUG:
+                    print("self.printer_connected: " + str(self.printer_connected))
+                if self.printer_connected == False:
                     if self.DEBUG:
                         print("Printer is not connected. Will attempt to reconnect.")
                     try:
@@ -1680,26 +1754,44 @@ class PrivacyManagerAPIHandler(APIHandler):
                             if self.DEBUG:
                                 print("printer.reconnect also didn't work. Error: " + str(ex))
                         
-                if self.printer.isConnected():
+                self.last_printer_check_time = time_module.time()
+                        
+                
+                if self.printer_connected == False:
+                    time_module.sleep(1)
+                    self.printer_connected = self.printer.isConnected()
+                    
+                if self.printer_connected:
+                    self.printer_connection_counter = 0
+                    
                     if self.power_timeout_set == False:
                         self.power_timeout_set = True
-                        self.printer.setPowerTimeout(300) # minutes. Tells device to stay awake. 300 minutes = 5 hours
-                        os.system('sudo bluetoothctl trust ' + str(self.persistent_data['printer_mac']))
-                        
-                        
-                    self.printer_connected = True
-                    self.printer_connection_counter = 0
+                        try:
+                            self.printer.setPowerTimeout(300) # minutes. Tells device to stay awake. 300 minutes = 5 hours
+                            os.system('sudo bluetoothctl trust ' + str(self.persistent_data['printer_mac']))
+                        except Exception as ex:
+                            if self.DEBUG:
+                                print("setPowerTimeout error: " + str(ex))
+                                
+                    
+                    
                     if self.DEBUG:
-                        print(f'Name: {self.printer.getDeviceName()}')
-                        print(f'S/N: {self.printer.getDeviceSerialNumber()}')
-                        print(f'F/W: {self.printer.getDeviceFirmware()}')
-                        print(f'Battery: {self.printer.getDeviceBattery()}%')
-                        print(f'H/W: {self.printer.getDeviceHardware()}')
-                        print(f'MAC: {self.printer.getDeviceMAC()}')
+                        try:
+                            print(f'Name: {self.printer.getDeviceName()}')
+                            print(f'S/N: {self.printer.getDeviceSerialNumber()}')
+                            print(f'F/W: {self.printer.getDeviceFirmware()}')
+                            print(f'Battery: {self.printer.getDeviceBattery()}%')
+                            print(f'H/W: {self.printer.getDeviceHardware()}')
+                            print(f'MAC: {self.printer.getDeviceMAC()}')
+                        except Exception as ex:
+                            if self.DEBUG:
+                                print("Debug only Error while asking the printer for details: " + str(ex))
+                        
                 else:
-                    print("ERROR, was unable to (re)connect to the printer")
-                    self.printer_connected = False
+                    if self.DEBUG:
+                        print("ERROR, was unable to (re)connect to the printer")
                 
+                # update thing property
                 if self.adapter != None:
                     if 'printer_connected' in self.adapter.thing.properties:
                         self.adapter.thing.properties['printer_connected'].update(self.printer_connected)
@@ -1710,8 +1802,11 @@ class PrivacyManagerAPIHandler(APIHandler):
                         
         except Exception as ex:
             print("error setting up printer: " + str(ex))
+            self.printer_connected = False
 
+        self.busy_connecting_to_printer = False
 
+        return self.printer_connected
 
 
     def print_image_file(self,filename, print_rotation=0):

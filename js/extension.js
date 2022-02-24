@@ -426,8 +426,6 @@
             const bluetooth_scan_button = document.getElementById('extension-privacy-manager-start-bluetooth-scan-button');
 
             pre.innerText = "";
-
-
             
             API.getThings().then((things) => {
                 for (let key in things) {
@@ -449,19 +447,7 @@
                 }
                 console.log("complete things lookup table: ", this.thing_title_lookup_table);
             });
-            /*
-    	    API.getThings().then((things) => {
-		        console.log("all things: ");
-                console.log(things);
-                
-                
-                //console.log("this.all_things: ", this.all_things);
-                //console.log("this.title_lookup_table: ", this.title_lookup_table);
-                
-                //this.request_devices_list();
-            });
-            */
-            
+
             
             // TABS
 
@@ -483,20 +469,6 @@
                 //this.scan_for_printer();
                 this.show_printer_state();
             });
-            /*
-            
-            // Quick templates
-            tab_button_quick.addEventListener('click', () => {
-                this.addClass(tab_button_quick, "extension-privacy-manager-button-active");
-                this.removeClass(tab_button_internal, "extension-privacy-manager-button-active");
-                this.removeClass(tab_button_sculptor, "extension-privacy-manager-button-active");
-                
-                this.addClass(tab_internal, "extension-privacy-manager-hidden");
-                this.addClass(tab_sculptor, "extension-privacy-manager-hidden");
-                this.removeClass(tab_quick, "extension-privacy-manager-hidden");
-            });
-            */
-            
             
             // Data sculptor tab
             tab_button_sculptor.addEventListener('click', () => {                
@@ -597,6 +569,7 @@
                     document.getElementById('extension-privacy-manager-print-test-button').style.display = 'block';
                 }).catch((e) => {
                     console.log("Privacy manager: error in print test: ", e);
+                    alert('Error: could not connect to the controller');
                     document.getElementById('extension-privacy-manager-print-test-progress').style.display = 'none';
                     document.getElementById('extension-privacy-manager-print-test-button').style.display = 'block';
                     this.show_printer_connection_state(false);
@@ -633,6 +606,45 @@
                 
             });
             
+            
+            
+            // Print icon
+            document.getElementById('extension-privacy-manager-printable-icons-list').addEventListener('click', (event) => {
+                console.log("print icon button clicked");
+                if(confirm("Are you sure you want to print this icon?")){
+                    
+                    const filename = event.target.getAttribute('data-filename');
+                    console.log("filename: ", filename);
+                    
+                    window.API.postJson(
+                        `/extensions/${this.id}/api/print_image`, //,{'printer_log':printer_log, 'printer_interval':printer_interval}
+                            {'filename':filename}
+                    ).then((body) => {
+                        console.log(body);
+                        
+                        if(body.state == 'error'){
+                            alert("Error, could not print the file")
+                        }
+                        else{
+                            console.log("image was sent to printer");
+                        }
+                        
+                    }).catch((e) => {
+                        console.log("Privacy manager: error in print icon: ", e);
+                        alert('Could not print icon - connection error');
+                    });
+                }
+                
+            });
+            
+            
+            
+            
+            
+            
+            //
+            //  DATA SCULPTOR BUTTONS
+            //
             
 
 
@@ -697,7 +709,10 @@
                      
                      if(typeof body['persistent']['duration'] != 'undefined'){
                          console.log("setting dropdown to duration: ", body['persistent']['duration']);
-                         document.getElementById('extension-privacy-manager-quick-delete-time-dropdown').value = body['persistent']['duration'];
+                         if(document.getElementById('extension-privacy-manager-quick-delete-time-dropdown') != null){
+                             document.getElementById('extension-privacy-manager-quick-delete-time-dropdown').value = body['persistent']['duration'];
+                         }
+                         
                      }
                      
                  }
@@ -715,7 +730,6 @@
                 
 
             }).catch((e) => {
-                //pre.innerText = e.toString();
                 console.log("Privacy manager: error in show call to api/init: ", e);
             });
             
@@ -787,16 +801,16 @@
             fresh_date.setMilliseconds(document.getElementById('extension-privacy-manager-input-millis').value);
 
             /*
-        console.log(document.getElementById('extension-privacy-manager-input-year').value);
-        console.log(document.getElementById('extension-privacy-manager-input-month').value);
-        console.log(document.getElementById('extension-privacy-manager-input-day').value);
-        console.log(document.getElementById('extension-privacy-manager-input-hour').value);
-        console.log(document.getElementById('extension-privacy-manager-input-minute').value);
-        console.log(document.getElementById('extension-privacy-manager-input-second').value);
-        console.log(document.getElementById('extension-privacy-manager-input-millis').value);
+            console.log(document.getElementById('extension-privacy-manager-input-year').value);
+            console.log(document.getElementById('extension-privacy-manager-input-month').value);
+            console.log(document.getElementById('extension-privacy-manager-input-day').value);
+            console.log(document.getElementById('extension-privacy-manager-input-hour').value);
+            console.log(document.getElementById('extension-privacy-manager-input-minute').value);
+            console.log(document.getElementById('extension-privacy-manager-input-second').value);
+            console.log(document.getElementById('extension-privacy-manager-input-millis').value);
         
-        console.log("new date stamp: " + fresh_date.valueOf() );
-        */
+            console.log("new date stamp: " + fresh_date.valueOf() );
+            */
             return fresh_date.valueOf();
         }
 
@@ -811,9 +825,9 @@
             var new_date_stamp = this.get_new_date(); // reconnect all the pieces from the dropdowns (and the hidden milliseconds value) into the new date
             /*
 			console.log("____action = " + action);
-      console.log("property = " + updating_property_id);
+            console.log("property = " + updating_property_id);
 			console.log("of type = " + updating_data_type);
-      console.log("old_date_stamp = " + old_date_stamp);
+            console.log("old_date_stamp = " + old_date_stamp);
 			console.log("new_date_stamp = " + new_date_stamp);
 			*/
 
@@ -904,7 +918,7 @@
                 this.display_thing_data(updating_property_id, updating_data_type, body['data']);
 
             }).catch((e) => {
-                console.log("Privacy manager: error in deletion handler");
+                console.log("Privacy manager: error in deletion handler: ", e);
                 pre.innerText = e.toString();
             });
 
@@ -972,7 +986,7 @@
                 this.show_internal_logs(body['data']);
 
             }).catch((e) => {
-                console.log("Privacy manager: error in internal log deletion handler");
+                console.log("Privacy manager: error in internal log deletion handler: ", e);
                 pre.innerText = e.toString();
             });
 
@@ -1049,10 +1063,12 @@
             if(connected){
                 document.getElementById('extension-privacy-manager-printer-connected').innerHTML = "⇄";
                 document.getElementById('extension-privacy-manager-printer-connected').style.background = "green";
+                document.getElementById('extension-privacy-manager-view').classList.add('extension-privacy-manager-printer-connected');
             }
             else{
                 document.getElementById('extension-privacy-manager-printer-connected').innerHTML = "?";
                 document.getElementById('extension-privacy-manager-printer-connected').style.background = "red";
+                document.getElementById('extension-privacy-manager-view').classList.remove('extension-privacy-manager-printer-connected');
             }
         }
 
@@ -1067,10 +1083,11 @@
             ).then((body) => {
                 //console.log(body);
                 if(body.scanning){
-                    console.log("still scanning for a printer");
+                    document.getElementById('extension-privacy-manager-start-bluetooth-scan-button').style.display = 'none';
                 }
                 else{
                     console.log("not currently scanning for a printer");
+                    document.getElementById('extension-privacy-manager-start-bluetooth-scan-button').style.display = 'block';
                 }
 
                 
@@ -1091,7 +1108,7 @@
                 if( typeof body['persistent']['printer_log_name'] != 'undefined'){
                     if(body['persistent']['printer_log_name'] != "None"){
                         document.getElementById('extension-privacy-manager-selected-log-to-print').innerText = body['persistent']['printer_log_name'];
-                        document.getElementById('extension-privacy-manager-clean-slate-container').style.display = 'block';
+                        //document.getElementById('extension-privacy-manager-clean-slate-container').style.display = 'block';
                     }
                 }
                 
@@ -1139,7 +1156,7 @@
                 
                 for (var key in logs_list) {
                     //console.log(key);
-                    console.log("logs list: ", logs_list[key]);
+                    //console.log("logs list: ", logs_list[key]);
                     var dataline = JSON.parse(logs_list[key]['name']);
                     //console.log(Object.keys(dataline));
 
@@ -1157,7 +1174,7 @@
                     var new_option = new Option(nice_title,logs_list[key]['id']);
                     if(typeof body['persistent']['printer_log'] != 'undefined'){
                         if( body['persistent']['printer_log'] == logs_list[key]['id'] ){
-                            console.log("setting selected log: " + logs_list[key]['id']);
+                            //console.log("setting selected log: " + logs_list[key]['id']);
                             new_option.selected = true;
                         }
                     }
@@ -1183,7 +1200,7 @@
 					log_to_print_dropdown.options[property_dropdown.options.length] = new Option("value", "log name");
 				}
                 */
-                console.log( document.getElementById('extension-privacy-manager-printer-log-dropdown-container') );
+                //console.log( document.getElementById('extension-privacy-manager-printer-log-dropdown-container') );
                 document.getElementById('extension-privacy-manager-printer-log-dropdown-container').innerHTML = "";
                 document.getElementById('extension-privacy-manager-printer-log-dropdown-container').append(log_to_print_dropdown);
                 
@@ -1212,7 +1229,7 @@
                 // Upgrade thing title and append property title
                 human_readable_thing_title = this.thing_title_lookup_table[human_readable_thing_title].title + ' - ' + human_readable_property_title;
             }
-            console.log("original title after lookup: ", human_readable_thing_title);
+            //console.log("original title after lookup: ", human_readable_thing_title);
             return human_readable_thing_title;
             //console.log(human_readable_thing_title);
         }

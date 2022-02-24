@@ -321,7 +321,7 @@
 
               <div id="extension-privacy-manager-tab-print" class="extension-privacy-manager-tab extension-privacy-manager-centered-page">
                     
-                    
+                    <img id="extension-privacy-manager-pp-header" src="/extensions/privacy-manager/images/pp-printer-icon.svg"/>
                     
                     <p>If you connect a PeriPage Bluetooth printer, then you can print your log data to paper at regular intervals. For example, each day at midnight you could print all the data that was collected during the day. After the print is complete, the log's data will be deleted from the system. So at the end of the day, the paper print will be the only copy of your data that remains.</p>
                     <p>This is an interesting option to have for very sensitive data. For example, you could print data about your health, and be sure that no digital copy remains.</p>
@@ -386,13 +386,30 @@
                         <div id="extension-privacy-manager-print-settings-saved-error" style="display:none">Connection error, could not save settings</div>
                     </div>
                     
-                    <div id="extension-privacy-manager-clean-slate-container" style="display:none">
+                    <div id="extension-privacy-manager-clean-slate-container" class="extension-privacy-manager-show-if-printer-connected">
                         <h3>Print now</h3>
                         <div class="extension-privacy-manager-vlak">
                             <p>Currently the log called <span id="extension-privacy-manager-selected-log-to-print" style="font-style:italic">...</span> is set to have it's data always printed, and then deleted, at regular intervals.</p>
-                            <p>However, you may wish to print all the <span style="font-style:italic">existing</span> data for this log now.</p>
+                            <p>If you want you can print all the collected data right now.</p>
                             <div class="extension-privacy-manager-flex-align-right">
                                 <button type="button" class="btn" id="extension-privacy-manager-print-now-button">Print now</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="extension-privacy-manager-printable-icons-container" class="extension-privacy-manager-show-if-printer-connected">
+                        <h3>Print icon</h3>
+                        <div class="extension-privacy-manager-vlak">
+                            <p>It's possible to create a physical button which, when pressed, triggers the "quick delete" beauty filter. IKEA offers a nice push button that allows you to use your own paper icons. Here you can print an icon for that button to indicate that it will delete data. Click on an image to print it.</p>
+                            <div id="extension-privacy-manager-printable-icons-list">
+                                <img data-filename="closed-eye-icon.png" src="/extensions/privacy-manager/images/closed-eye-icon-big.png" alt="closed eye icon"/>
+                                <img data-filename="closed-eye-icon.png" src="/extensions/privacy-manager/images/closed-eye-icon.png" alt="closed eye icon"/>
+                                <img data-filename="closed-eye-10min.png" src="/extensions/privacy-manager/images/closed-eye-10min.png" alt="closed eye icon"/>
+                                <img data-filename="closed-eye-20min.png" src="/extensions/privacy-manager/images/closed-eye-20min.png" alt="closed eye icon"/>
+                                <img data-filename="closed-eye-1hour.png" src="/extensions/privacy-manager/images/closed-eye-1hour.png" alt="closed eye icon"/>
+                                <img data-filename="closed-eye-2hours.png" src="/extensions/privacy-manager/images/closed-eye-2hours.png" alt="closed eye icon"/>
+                                <img data-filename="closed-eye-4hours.png" src="/extensions/privacy-manager/images/closed-eye-4hours.png" alt="closed eye icon"/>
+                                <img data-filename="closed-eye-8hours.png" src="/extensions/privacy-manager/images/closed-eye-8hours.png" alt="closed eye icon"/>
                             </div>
                         </div>
                     </div>

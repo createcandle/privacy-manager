@@ -5,6 +5,8 @@
             //console.log("Adding privacy manager to menu");
             this.addMenuEntry('Privacy Manager');
 
+            this.debug = false;
+            
             this.content = '';
             this.thing_title_lookup_table = [];
 
@@ -109,7 +111,7 @@
                     elem.parentNode.removeChild(elem);
                 }
                 
-                console.log("svg? ", typeof document.getElementById('extension-privacy-manager-thing-dataviz-svg'));
+                //console.log("svg? ", typeof document.getElementById('extension-privacy-manager-thing-dataviz-svg'));
 
                 //var svg = d3.select("#extension-privacy-manager-thing-dataviz").append("svg"),
                 var svg = d3.select("#extension-privacy-manager-thing-dataviz-svg"),
@@ -281,7 +283,7 @@
                         document.getElementById('extension-privacy-manager-input-change-old-epoch').value = this.getAttribute("data-date");
 
                         var select = new Date(Number(this.getAttribute("data-date")));
-                        console.log("selected point as date object = " + select);
+                        //console.log("selected point as date object = " + select);
 
                         document.getElementById('extension-privacy-manager-input-change-value').value = this.getAttribute("data-value");
                         document.getElementById('extension-privacy-manager-input-change-property-id').value = this.getAttribute("data-property-id");
@@ -290,8 +292,8 @@
                         document.getElementById('extension-privacy-manager-input-minute').value = select.getMinutes(); //select.toLocaleDateString("en-UK",{minute: '2-digit'});
                         document.getElementById('extension-privacy-manager-input-hour').value = select.getHours();
                         document.getElementById('extension-privacy-manager-input-day').value = select.getDate();
-                        console.log("select.getDate() = ", select.getDate() );
-                        console.log("select.getMonth() = ", select.getMonth() );
+                        //console.log("select.getDate() = ", select.getDate() );
+                        //console.log("select.getMonth() = ", select.getMonth() );
                         document.getElementById('extension-privacy-manager-input-month').value = select.getMonth() + 1;
                         document.getElementById('extension-privacy-manager-input-year').value = select.getFullYear();
                         document.getElementById('extension-privacy-manager-input-millis').value = select.getMilliseconds();
@@ -352,7 +354,7 @@
 
             var target_property_id = the_target.getAttribute('data-property-id');
             var target_data_type = the_target.getAttribute('data-data-type');
-            console.log(target_data_type);
+            //console.log(target_data_type);
             document.getElementById('extension-privacy-manager-input-change-data-type').value = target_data_type; // Make sure this is always populated with the correct data type. Bit of a clumsy use of hidden fields, should improve later.
             //console.log(target_thing_id);
 
@@ -363,7 +365,7 @@
                     'data_type': target_data_type
                 }
             ).then((body) => {
-                console.log(body);
+                //console.log(body);
                 this.display_thing_data(target_property_id, target_data_type, body['data']);
                 
                 //pre.innerText = JSON.stringify(body, null, 2);
@@ -445,7 +447,7 @@
                         
                     }
                 }
-                console.log("complete things lookup table: ", this.thing_title_lookup_table);
+                //console.log("complete things lookup table: ", this.thing_title_lookup_table);
             });
 
             
@@ -453,9 +455,9 @@
 
             document.getElementById('extension-privacy-manager-tab-buttons-container').addEventListener('click', (event) => {
                 var active_tab = event.target.innerText.toLowerCase().replace(/\s/g , "-");
-                console.log(active_tab);
+               // console.log(active_tab);
                 if(event.target.classList[0] == "extension-privacy-manager-main-tab-button"){
-                    console.log("clicked on menu tab button");
+                    //console.log("clicked on menu tab button");
                     if(active_tab == "?"){active_tab = "help";}
                     document.getElementById('extension-privacy-manager-content').className = 'extension-privacy-manager-active-tab-' + active_tab;
                 }
@@ -465,7 +467,7 @@
             
             // Print
             tab_button_print.addEventListener('click', (target) => {
-                console.log("showing print tab and calling printer_init");
+                //console.log("showing print tab and calling printer_init");
                 //this.scan_for_printer();
                 this.show_printer_state();
             });
@@ -486,13 +488,13 @@
                     }
 
                 ).then((body) => {
-                    console.log(body);
+                    //console.log(body);
                     //thing_list.innerText = body['data'];
                     this.show_internal_logs(body['data']);
 
                 }).catch((e) => {
                     //pre.innerText = e.toString();
-                    console.log("Privacy manager: error in show function:", e);
+                    console.log("Privacy manager: error in tab-button0internal click api call:", e);
                 });
 
             });
@@ -503,7 +505,7 @@
             // Quick delete button
             quick_delete_button.addEventListener('click', () => {
                 const duration = document.getElementById("extension-privacy-manager-quick-delete-time-dropdown").value;
-                console.log("quick delete button pressed. duration: " + duration);
+                //console.log("quick delete button pressed. duration: " + duration);
                 
 
                 window.API.postJson(
@@ -513,14 +515,13 @@
                     }
 
                 ).then((body) => {
-                    console.log("quick delete ajax API was called succcesfully: ", body);
+                    //console.log("quick delete ajax API was called succcesfully: ", body);
                     //thing_list.innerText = body['data'];
                     //this.show_internal_logs(body['data']);
 
                 }).catch((e) => {
                     //pre.innerText = e.toString();
                     console.log("Privacy manager: error in quick delete response: ", e);
-                    console.log(e.toString());
                 });
 
             });
@@ -530,19 +531,19 @@
             // PRINT BUTTONS
             
             bluetooth_scan_button.addEventListener('click', (target) => {
-                console.log("Bluetooth printer scan button clicked");
+                //console.log("Bluetooth printer scan button clicked");
                 this.scan_for_printer();
             });
             
             document.getElementById('extension-privacy-manager-set-print-button').addEventListener('click', (target) => {
-                console.log("set print button clicked");
+                //console.log("set print button clicked");
                 this.set_print();
             });
             
             
             // printer test button
             document.getElementById('extension-privacy-manager-print-test-button').addEventListener('click', (target) => {
-                console.log("printer test button clicked");
+                //console.log("printer test button clicked");
                 
                 document.getElementById('extension-privacy-manager-printer-connected').innerText = '?';
                 
@@ -569,7 +570,7 @@
                     document.getElementById('extension-privacy-manager-print-test-button').style.display = 'block';
                 }).catch((e) => {
                     console.log("Privacy manager: error in print test: ", e);
-                    alert('Error: could not connect to the controller');
+                    //alert('Error: could not connect to the controller');
                     document.getElementById('extension-privacy-manager-print-test-progress').style.display = 'none';
                     document.getElementById('extension-privacy-manager-print-test-button').style.display = 'block';
                     this.show_printer_connection_state(false);
@@ -578,13 +579,13 @@
             
             // print now button
             document.getElementById('extension-privacy-manager-print-now-button').addEventListener('click', (target) => {
-                console.log("print now button clicked");
+                //console.log("print now button clicked");
                 if(confirm("Are you sure? This will print and then delete all existing data for this particular log.")){
                     window.API.postJson(
                         `/extensions/${this.id}/api/print_now` //,{'printer_log':printer_log, 'printer_interval':printer_interval}
 
                     ).then((body) => {
-                        console.log(body);
+                        //console.log(body);
                         
                         if(body.print_result.state == 'error'){
                             if(typeof body.print_result.message != 'undefined'){
@@ -596,7 +597,7 @@
                             
                         }
                         else{
-                            console.log("test print was succesful");
+                            //console.log("test print was succesful");
                         }
                         
                     }).catch((e) => {
@@ -610,23 +611,23 @@
             
             // Print icon
             document.getElementById('extension-privacy-manager-printable-icons-list').addEventListener('click', (event) => {
-                console.log("print icon button clicked");
+                //console.log("print icon button clicked");
                 if(confirm("Are you sure you want to print this icon?")){
                     
                     const filename = event.target.getAttribute('data-filename');
-                    console.log("filename: ", filename);
+                    //console.log("filename: ", filename);
                     
                     window.API.postJson(
                         `/extensions/${this.id}/api/print_image`, //,{'printer_log':printer_log, 'printer_interval':printer_interval}
                             {'filename':filename}
                     ).then((body) => {
-                        console.log(body);
+                        //console.log(body);
                         
                         if(body.state == 'error'){
                             alert("Error, could not print the file")
                         }
                         else{
-                            console.log("image was sent to printer");
+                            //console.log("image was sent to printer");
                         }
                         
                     }).catch((e) => {
@@ -689,7 +690,7 @@
                 `/extensions/${this.id}/api/init` //,{'init':1}
 
             ).then((body) => {
-                console.log("Privacy manager init data: ", body);
+                //console.log("Privacy manager init data: ", body);
                 //thing_list.innerText = body['data'];
                 //this.create_thing_list(body['logs']);
                 
@@ -708,7 +709,7 @@
                      this.persistent = body['persistent'];
                      
                      if(typeof body['persistent']['duration'] != 'undefined'){
-                         console.log("setting dropdown to duration: ", body['persistent']['duration']);
+                         //console.log("setting dropdown to duration: ", body['persistent']['duration']);
                          if(document.getElementById('extension-privacy-manager-quick-delete-time-dropdown') != null){
                              document.getElementById('extension-privacy-manager-quick-delete-time-dropdown').value = body['persistent']['duration'];
                          }
@@ -770,18 +771,18 @@
 
 
         init_data_sculptor(){
-            console.log("in init_data_sculptor");
+            //console.log("in init_data_sculptor");
             window.API.postJson(
                 `/extensions/${this.id}/api/sculptor_init` //,{'init':1}
 
             ).then((body) => {
-                console.log(body);
+                //console.log(body);
                 //thing_list.innerText = body['data'];
                 this.create_thing_list(body['logs']);
 
             }).catch((e) => {
                 //pre.innerText = e.toString();
-                console.log("Privacy manager: error in show function");
+                //console.log("Privacy manager: error in show function");
                 console.log(e.toString());
             });
             
@@ -1033,16 +1034,21 @@
                 `/extensions/${this.id}/api/printer_scan` //,{'init':1}
 
             ).then((body) => {
-                //console.log(body);
+                console.log(body);
+                if(body['persistent']['printer_mac'] != ""){
+                    console.log("printer mac: ", body['persistent']['printer_mac']);
+                    document.getElementById('extension-privacy-manager-printer-list-name').innerText = body['persistent']['printer_name'];
+                    document.getElementById('extension-privacy-manager-printer-list-mac').innerText = body['persistent']['printer_mac'];
+                    document.getElementById('extension-privacy-manager-print-test-button').style.display = 'block';
+                }
                 
-                document.getElementById('extension-privacy-manager-printer-list-name').innerText = body['persistent']['printer_name'];
-                document.getElementById('extension-privacy-manager-printer-list-mac').innerText = body['persistent']['printer_mac'];
                 
                 //thing_list.innerText = body['data'];
                 //this.create_thing_list(body['logs']);
                 //this.create_printer_ui(body, true);
                 document.getElementById('extension-privacy-manager-print-busy-scanning').style.display = 'none';
                 document.getElementById('extension-privacy-manager-start-bluetooth-scan-button').style.display = 'block';
+                
 
             }).catch((e) => {
                 //pre.innerText = e.toString();

@@ -28,7 +28,7 @@
                         <option value="240">4 hours</option>
                         <option value="480">8 hours</option>
                     </select>
-                    <button id="extension-privacy-manager-quick-delete-button">Delete</button>
+                    <button id="extension-privacy-manager-quick-delete-button" class="text-button">Delete</button>
                 </div>
                 
                 
@@ -315,7 +315,7 @@
                     <div id="extension-privacy-manager-logs-list"></div>
                     <p>The internal logs can be automatically deleted every hour.</p>
                     <input type="checkbox" id="extension-privacy-manager-delete-internal-logs-checkbox" name="extension-privacy-manager-delete-internal-logs-checkbox"/><label for="extension-privacy-manager-delete-internal-logs-checkbox">Automatically delete</label><br/>
-                    <button type="button" id="extension-privacy-manager-button-delete-all-logs">Delete all internal logs</button>
+                    <button type="button" id="extension-privacy-manager-button-delete-all-logs" class="text-button">Delete all internal logs</button>
               </div>
 
 
@@ -334,8 +334,8 @@
                         <div id="extension-privacy-manager-print-test-progress" style="display:none">Trying to connect to the printer...</div>
                     
                         <div class="extension-privacy-manager-flex-align-right">
-                            <button type="button" class="btn" id="extension-privacy-manager-print-test-button" style="display:none">Test connection</button>
-                            <button type="button" class="btn" id="extension-privacy-manager-start-bluetooth-scan-button">Bluetooth scan</button>
+                            <button type="button" class="btn text-button" id="extension-privacy-manager-print-test-button" style="display:none">Test connection</button>
+                            <button type="button" class="btn text-button" id="extension-privacy-manager-start-bluetooth-scan-button">Bluetooth scan</button>
                         </div>
                     </div>
                     
@@ -380,7 +380,7 @@
                         </div>
                         
                         <div class="extension-privacy-manager-flex-align-right">
-                            <button type="button" class="btn" id="extension-privacy-manager-set-print-button">Save settings</button>
+                            <button type="button" class="btn text-button" id="extension-privacy-manager-set-print-button">Save settings</button>
                         </div>
                         <div id="extension-privacy-manager-print-settings-saved" style="display:none">Settings were saved</div>
                         <div id="extension-privacy-manager-print-settings-saved-error" style="display:none">Connection error, could not save settings</div>
@@ -392,7 +392,7 @@
                             <p>Currently the log called <span id="extension-privacy-manager-selected-log-to-print" style="font-style:italic">...</span> is set to have it's data always printed, and then deleted, at regular intervals.</p>
                             <p>If you want you can print all the collected data right now.</p>
                             <div class="extension-privacy-manager-flex-align-right">
-                                <button type="button" class="btn" id="extension-privacy-manager-print-now-button">Print now</button>
+                                <button type="button" class="btn text-button" id="extension-privacy-manager-print-now-button">Print now</button>
                             </div>
                         </div>
                     </div>
@@ -436,7 +436,6 @@
         <div id="extension-privacy-manager-debug-warning" style="display:none">
             <h2>Debugging is enabled</h2>
             <p>This addon is currently set to save detailed information about its operation in the internal logs. This may impact your privacy, as this also means that insights into your behaviour might be stored in those logs.</p>
-            <p>You can disable debugging mode by going to <span style="font-style:italic">Settings</span>, then <span style="font-style:italic">Addons</span>, and then clicking on the <span style="font-style:italic">Settings</span> button for the <span style="font-style:italic">Privacy Manager</span> addon. There you can uncheck the debugging option and click <span style="font-style:italic">Apply</span>.
         </div>
         
         <div id="extension-privacy-manager-response" style="display:none">

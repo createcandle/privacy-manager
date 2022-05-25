@@ -114,7 +114,7 @@ class PrivacyManagerDevice(Device):
         try:
             if 'duration' in self.adapter.api_handler.persistent_data:
                 duration_string = self.adapter.api_handler.duration_lookup_table[ str(self.adapter.api_handler.persistent_data['duration']) ]
-                print("duration string lookup succeeded? Duration string is now: " + str(duration_string))
+                #print("duration string lookup succeeded? Duration string is now: " + str(duration_string))
         except Exception as ex:
             print("Error looking up duration in table: " + str(ex))
 

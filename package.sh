@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-#python3 -m pip install --upgrade pip
+python3 -m pip install --upgrade pip==21.3.1
 
 export PYTHONIOENCODING=utf8
 

@@ -37,7 +37,7 @@
 
 #extension-privacy-manager-view button{
     font-size: 1.6rem;
-	padding: .5rem 1rem;
+	padding: 1rem 2rem;
 	border: none;
     border-radius:.5rem;
     cursor:pointer;
@@ -45,6 +45,10 @@
 }
 #extension-privacy-manager-view button:hover{
     opacity:1;
+}
+
+#extension-privacy-manager-tab-buttons-container{
+    margin-top:2rem;
 }
 
 #extension-privacy-manager-view #extension-privacy-manager-tab-buttons-container button{
@@ -115,6 +119,8 @@
 	font-size:0;
     display:flex;
     flex-wrap:wrap;
+    max-width: 60rem;
+    margin: 0 auto;
 }
 
 #extension-privacy-manager-view .extension-privacy-manager-tab-buttons button{
@@ -451,8 +457,8 @@
 }
 
 #extension-privacy-manager-thing-display{
-	/*width:calc(100% - 12rem);*/
-	background-color:rgba(255,255,255,.1);
+	/*width:calc(100% - 12rem);
+	background-color:rgba(255,255,255,.1);*/
 	width:100%;
     border-top-right-radius:.5rem;
     border-bottom-right-radius:.5rem;
@@ -462,6 +468,7 @@
 	padding:1rem 0 0 0;
 	overflow: hidden;
 	height:400px;
+    background-color:rgba(255,255,255,.1);
 }
 
 
@@ -571,9 +578,10 @@
 
 /*  BUTTONS */
 
+/*
 #extension-privacy-manager-shutdown,
 #extension-privacy-manager-reboot,
-#extension-privacy-manager-fullscreen-button,
+#extension-privacy-manager-fullscreen-button,*/
 #extension-privacy-manager-form-submit {
   font-size: 1.6rem;
   padding: 0.5rem 1rem;
@@ -582,12 +590,17 @@
   margin: 1rem 0;
 }
 
-#extension-privacy-manager-shutdown:hover,
+/*#extension-privacy-manager-shutdown:hover,
 #extension-privacy-manager-reboot:hover,
-#extension-privacy-manager-fullscreen-button:hover,
+#extension-privacy-manager-fullscreen-button:hover,*/
 #extension-privacy-manager-form-submit:hover{
 	background-color: LightGreen;
 }
+
+#extension-privacy-manager-tab-data-sculptor button{
+    padding: 0.5rem 1rem
+}
+
 
 
 .extension-privacy-manager-checkbox-container{
@@ -781,6 +794,7 @@ INTERNAL LOGS
 	
 	#extension-privacy-manager-options-pane-buttons button{
 		width:auto;
+        padding:0.5rem 1rem;
 	}
 	
 	#extension-privacy-manager-response{

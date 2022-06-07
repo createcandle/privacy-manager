@@ -481,18 +481,24 @@ class PrivacyManagerAPIHandler(APIHandler):
                             else:
                                 state = 'ok'
                                 
-                            internal_logs_auto_delete = False
+                            #internal_logs_auto_delete = False
                             try:
                                 internal_logs_auto_delete = bool(self.persistent_data['internal_logs_auto_delete'])
                             except Exception as ex:
                                 print("internal_logs_auto_delete init error: " + str(ex))
-                                self.persistent_data['internal_logs_auto_delete'] = False
+                                self.persistent_data['internal_logs_auto_delete'] = True
                                 self.save_persistent_data()
                             
                             return APIResponse(
                               status=200,
                               content_type='application/json',
-                              content=json.dumps({'state': state, 'logs': logs_list, 'scanning': self.doing_bluetooth_scan, 'persistent': self.persistent_data, 'printer_connected':self.printer_connected, 'internal_logs_auto_delete': internal_logs_auto_delete, 'debug': self.DEBUG}),
+                              content=json.dumps({'state': state, 
+                                                  'logs': logs_list, 
+                                                  'scanning': self.doing_bluetooth_scan, 
+                                                  'persistent': self.persistent_data, 
+                                                  'printer_connected':self.printer_connected, 
+                                                  'internal_logs_auto_delete': self.persistent_data['internal_logs_auto_delete'], 
+                                                  'debug': self.DEBUG}),
                             )
                         except Exception as ex:
                             print("Error handling init request: " + str(ex))

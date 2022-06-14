@@ -185,7 +185,7 @@ class PrivacyManagerAPIHandler(APIHandler):
             should_save_persistent_data = True
         
         if 'printer_interval' not in self.persistent_data:
-            self.persistent_data['printer_interval'] = 'none':
+            self.persistent_data['printer_interval'] = 'none'
             should_save_persistent_data = True
         
         if should_save_persistent_data:

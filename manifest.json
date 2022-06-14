@@ -41,7 +41,7 @@
     }
   },	
   "short_name": "Privacy",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",

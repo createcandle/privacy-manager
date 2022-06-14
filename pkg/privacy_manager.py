@@ -184,6 +184,10 @@ class PrivacyManagerAPIHandler(APIHandler):
             self.persistent_data['printer_contrast'] = 'medium'
             should_save_persistent_data = True
         
+        if 'printer_interval' not in self.persistent_data:
+            self.persistent_data['printer_interval'] = 'none':
+            should_save_persistent_data = True
+        
         if should_save_persistent_data:
             self.save_persistent_data()
         

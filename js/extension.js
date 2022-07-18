@@ -54,7 +54,7 @@
                 */
                 
                 const nice_name = this.get_thing_and_property_string(dataline['thing'],dataline['property']);
-                console.log("nice name: " + nice_name);
+                //console.log("nice name: " + nice_name);
                 var textnode = document.createTextNode( nice_name ); // Create a text node
                 
                 
@@ -72,14 +72,14 @@
         display_thing_data(property_id, data_type, raw_data) { // Uses json to generate dataviz
             
             try{
-                console.log("in display_thing_data. property_id: " + property_id);
+                //console.log("in display_thing_data. property_id: " + property_id);
                 const dataviz = document.getElementById('extension-privacy-manager-thing-dataviz');
                 //console.log("dataviz:",dataviz);
                 //dataviz.innerHTML = "";
             
             
                 if(raw_data.length == 0){
-                    console.log("no data to visualize");
+                    //console.log("no data to visualize");
                     document.getElementById('extension-privacy-manager-no-data-available').style.display = 'block';
                     document.getElementById("extension-privacy-manager-thing-dataviz-svg").style.display = 'none';
                 }
@@ -553,7 +553,7 @@
                     `/extensions/${this.id}/api/print_test` //,{'printer_log':printer_log, 'printer_interval':printer_interval}
 
                 ).then((body) => {
-                    console.log(body);
+                    //console.log(body);
                     if(body.printer_connected == false){
                         alert("Could not connect to printer. Try turning it on and off again.");
                     }
@@ -758,7 +758,17 @@
 		hide(){
 			//console.log("in hide");
 			//clearInterval(window.zigbee2mqtt_interval);
-			this.view.innerHTML = "";
+			//this.view.innerHTML = "";
+            
+			try{
+                if(document.getElementById('extension-privacy-manager-menu-item').classList.contains('selected') == false){
+                    this.view.innerHTML = "";
+                }
+			}
+            catch(e){
+                console.log("Privacy manager addon: error in hide(): ", e);
+            }
+            
 		}
 
 

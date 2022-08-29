@@ -1,63 +1,79 @@
-<div id="extension-privacy-manager-content" class="extension-privacy-manager-active-tab-beauty-filters">
-  <div id="extension-privacy-manager-content-wrapper">
-    <div id="extension-privacy-manager-content-container">
-        <h1 id="extension-privacy-manager-title"><span id="extension-privacy-manager-icon"></span>Privacy manager</h1>
-        
-        <div id="extension-privacy-manager-tab-buttons-container" class="extension-privacy-manager-tab-buttons">
-            <button id="extension-privacy-manager-tab-button-beauty-filters" class="extension-privacy-manager-main-tab-button">Beauty filters</button>
-            <button id="extension-privacy-manager-tab-button-data-sculptor" class="extension-privacy-manager-main-tab-button">Data sculptor</button>
-            <button id="extension-privacy-manager-tab-button-internal-logs" class="extension-privacy-manager-main-tab-button">Internal logs</button>
-            <button id="extension-privacy-manager-tab-button-print" class="extension-privacy-manager-main-tab-button">Print</button>
-            <button id="extension-privacy-manager-tab-button-help" class="extension-privacy-manager-main-tab-button">?</button>
-        </div>
-        
-        <div id="extension-privacy-manager-tabs-container">
-            <div id="extension-privacy-manager-tab-beauty-filters" class="extension-privacy-manager-tab extension-privacy-manager-centered-page">
-                <h3>Beauty filters</h3>
-                <p>Use these options to quickly adjust your data to make yourself look good, or to hide an event from other people in your home.</p>
-            
-                <div class="extension-privacy-manager-vlak">
-                    <h4>Quick delete</h4>
-                    <p>This deletes ALL log data for the past...</p>
-                    <select id="extension-privacy-manager-quick-delete-time-dropdown" class="extension-privacy-manager-dropdown localization-select">
-                        <option value="1">1 minute</option>
-                        <option value="10">10 minutes</option>
-                        <option value="30" selected>30 minutes</option>
-                        <option value="60">1 hour</option>
-                        <option value="120">2 hours</option>
-                        <option value="240">4 hours</option>
-                        <option value="480">8 hours</option>
-                    </select>
-                    <button id="extension-privacy-manager-quick-delete-button" class="text-button">Delete</button>
+<div id="extension-privacy-manager-content" class="extension-privacy-manager-active-tab-things">
+    <div id="extension-privacy-manager-content-wrapper">
+        <div id="extension-privacy-manager-content-container">
+            <h1 id="extension-privacy-manager-title"><span id="extension-privacy-manager-icon"></span>Privacy manager</h1>
+
+            <div id="extension-privacy-manager-tab-buttons-container" class="extension-privacy-manager-tab-buttons">
+                <button id="extension-privacy-manager-tab-button-things" class="extension-privacy-manager-main-tab-button">Things</button>
+                <button id="extension-privacy-manager-tab-button-filters" class="extension-privacy-manager-main-tab-button">Filters</button>
+                <button id="extension-privacy-manager-tab-button-sculptor" class="extension-privacy-manager-main-tab-button">Sculptor</button>
+                <button id="extension-privacy-manager-tab-button-internal-logs" class="extension-privacy-manager-main-tab-button">Internal logs</button>
+                <button id="extension-privacy-manager-tab-button-print" class="extension-privacy-manager-main-tab-button">Print</button>
+                <button id="extension-privacy-manager-tab-button-help" class="extension-privacy-manager-main-tab-button">?</button>
+            </div>
+
+            <div id="extension-privacy-manager-tabs-container">
+                
+                
+                <div id="extension-privacy-manager-tab-things" class="extension-privacy-manager-tab extension-privacy-manager-centered-page">
+                    <h3>Things</h3>
+                    <!--<p>An overview of the privacy settings of currently available things:</p>-->
+
+                    <div id="extension-privacy-manager-things-list-container">
+                        
+                    </div>
                 </div>
                 
                 
-                <!--<p>Note: this addon massages data as quickly as possible, but in the logs may retain some data from the last few seconds.</p>-->
-            </div>
-        
-            <div id="extension-privacy-manager-tab-data-sculptor" class="extension-privacy-manager-tab">
+                <div id="extension-privacy-manager-tab-filters" class="extension-privacy-manager-tab extension-privacy-manager-centered-page">
+                    <h3>Beauty filters</h3>
+                    <p>Use these options to quickly adjust your data to make yourself look good, or to hide an event from other people in your home.</p>
+
+                    <div class="extension-privacy-manager-vlak">
+                        <h4>Quick delete</h4>
+                        <p>This deletes ALL log data for the past...</p>
+                        <select id="extension-privacy-manager-quick-delete-time-dropdown" class="extension-privacy-manager-dropdown localization-select">
+                            <option value="1">1 minute</option>
+                            <option value="10">10 minutes</option>
+                            <option value="30" selected>30 minutes</option>
+                            <option value="60">1 hour</option>
+                            <option value="120">2 hours</option>
+                            <option value="240">4 hours</option>
+                            <option value="480">8 hours</option>
+                        </select>
+                        <button id="extension-privacy-manager-quick-delete-button" class="text-button">Delete</button>
+                    </div>
+
+                    <!--<p>Note: this addon massages data as quickly as possible, but in the logs may retain some data from the last few seconds.</p>-->
+                </div>
+
+
+                <div id="extension-privacy-manager-tab-sculptor" class="extension-privacy-manager-tab">
                     <h3>Data sculptor</h3>
-                    <div id="extension-privacy-manager-data-sculptor">
+                    <div id="extension-privacy-manager-sculptor">
                         <div id="extension-privacy-manager-thing-left">
                             <ul id="extension-privacy-manager-thing-list">
                                 <div class="extension-privacy-manager-spinner">
-                                    <div></div><div></div><div></div><div></div>
+                                    <div></div>
+                                    <div></div>
+                                    <div></div>
+                                    <div></div>
                                 </div>
                             </ul>
                         </div>
                         <div id="extension-privacy-manager-thing-display">
                             <div id="extension-privacy-manager-thing-dataviz">
-                                <div id="extension-privacy-manager-no-data-available" style="display:none">No data available</div>
+                                <div id="extension-privacy-manager-no-data-available" style="display: none;">No data available</div>
                                 <svg id="extension-privacy-manager-thing-dataviz-svg" height="400"></svg>
                             </div>
                             <div id="extension-privacy-manager-thing-options">
                                 <div id="extension-privacy-manager-thing-options-holder">
                                     <h4>Selected point</h4>
-                                    <input  type="hidden" id="extension-privacy-manager-input-change-property-id" name="extension-privacy-manager-property-id">
-                                    <input  type="hidden" id="extension-privacy-manager-input-change-data-type" name="extension-privacy-manager-data-type">
-                                    <input  type="hidden" id="extension-privacy-manager-input-change-old-epoch" name="extension-privacy-manager-old-epoch">
+                                    <input type="hidden" id="extension-privacy-manager-input-change-property-id" name="extension-privacy-manager-property-id" />
+                                    <input type="hidden" id="extension-privacy-manager-input-change-data-type" name="extension-privacy-manager-data-type" />
+                                    <input type="hidden" id="extension-privacy-manager-input-change-old-epoch" name="extension-privacy-manager-old-epoch" />
                                     <!--<input  type="text" id="extension-privacy-manager-input-change-date" name="extension-privacy-manager-new-date">-->
-                                    <input  type="hidden" id="extension-privacy-manager-input-millis" name="extension-privacy-manager-millis">
+                                    <input type="hidden" id="extension-privacy-manager-input-millis" name="extension-privacy-manager-millis" />
                                     <div id="extension-privacy-manager-picker">
                                         <div class="extension-privacy-manager-inline extension-privacy-manager-inline-date">
                                             <span>
@@ -68,7 +84,8 @@
                                                     <option value="2021">2021</option>
                                                     <option value="2020">2020</option>
                                                     <option value="2019">2019</option>
-                                                </select><span>Y</span>
+                                                </select>
+                                                <span>Y</span>
                                             </span>
                                             <span>
                                                 <select id="extension-privacy-manager-input-month" class="extension-privacy-manager-input-date-dropdown" style="width: auto;">
@@ -85,7 +102,8 @@
                                                     <option value="9">October</option>
                                                     <option value="10">November</option>
                                                     <option value="11">December</option>
-                                                </select><span>M</span>
+                                                </select>
+                                                <span>M</span>
                                             </span>
                                             <span>
                                                 <select id="extension-privacy-manager-input-day" class="extension-privacy-manager-input-date-dropdown" style="width: auto;">
@@ -121,10 +139,11 @@
                                                     <option value="29">29</option>
                                                     <option value="30">30</option>
                                                     <option value="31">31</option>
-                                                </select><span>D</span>
+                                                </select>
+                                                <span>D</span>
                                             </span>
                                         </div>
-                                    
+
                                         <div class="extension-privacy-manager-inline extension-privacy-manager-inline-time">
                                             <span>
                                                 <select id="extension-privacy-manager-input-hour" class="extension-privacy-manager-input-date-dropdown" style="width: auto;">
@@ -153,10 +172,11 @@
                                                     <option value="21">21</option>
                                                     <option value="22">22</option>
                                                     <option value="23">23</option>
-                                                </select><span>h</span>
+                                                </select>
+                                                <span>h</span>
                                             </span>
                                             <span>
-                                                <select  id="extension-privacy-manager-input-minute" class="extension-privacy-manager-input-date-dropdown" style="width: auto;">
+                                                <select id="extension-privacy-manager-input-minute" class="extension-privacy-manager-input-date-dropdown" style="width: auto;">
                                                     <option value=""></option>
                                                     <option value="0">00</option>
                                                     <option value="1">01</option>
@@ -218,7 +238,8 @@
                                                     <option value="57">57</option>
                                                     <option value="58">58</option>
                                                     <option value="59">59</option>
-                                                </select><span>m</span>
+                                                </select>
+                                                <span>m</span>
                                             </span>
                                             <span>
                                                 <select id="extension-privacy-manager-input-second" class="extension-privacy-manager-input-date-dropdown" style="width: auto;">
@@ -283,72 +304,74 @@
                                                     <option value="57">57</option>
                                                     <option value="58">58</option>
                                                     <option value="59">59</option>
-                                                </select><span>s</span>
+                                                </select>
+                                                <span>s</span>
                                             </span>
                                         </div>
                                     </div>
-                                
+
                                     <div>
-                                        <input type="text" id="extension-privacy-manager-input-change-value" name="extension-privacy-manager-new-value">
+                                        <input type="text" id="extension-privacy-manager-input-change-value" name="extension-privacy-manager-new-value" />
                                     </div>
-                                
+
                                     <div id="extension-privacy-manager-options-pane-buttons" class="extension-privacy-manager-inline">
                                         <button type="button" id="extension-privacy-manager-button-change-point" class="extension-privacy-manager-button">Change</button>
-                                    
+
                                         <button type="button" id="extension-privacy-manager-button-create-point" class="extension-privacy-manager-button">Create</button>
-                                    
+
                                         <button type="button" id="extension-privacy-manager-button-delete-point" class="extension-privacy-manager-button">Delete</button>
-                                        <button type="button" id="extension-privacy-manager-button-delete-before" class="extension-privacy-manager-button extension-privacy-manager-button-extra"> Delete, and all before</button>
-                                        <button type="button" id="extension-privacy-manager-button-delete-after" class="extension-privacy-manager-button extension-privacy-manager-button-extra"> Delete, and all after</button>
+                                        <button type="button" id="extension-privacy-manager-button-delete-before" class="extension-privacy-manager-button extension-privacy-manager-button-extra">Delete, and all before</button>
+                                        <button type="button" id="extension-privacy-manager-button-delete-after" class="extension-privacy-manager-button extension-privacy-manager-button-extra">Delete, and all after</button>
                                     </div>
                                 </div>
-                            <div id="extension-privacy-manager-thing-options-value"></div>
-                        
+                                <div id="extension-privacy-manager-thing-options-value"></div>
                             </div>
                         </div>
                     </div>
-              </div>
+                </div>
 
-        
-              <div id="extension-privacy-manager-tab-internal-logs" class="extension-privacy-manager-tab extension-privacy-manager-centered-page">
-                    
+                <div id="extension-privacy-manager-tab-internal-logs" class="extension-privacy-manager-tab extension-privacy-manager-centered-page">
                     <h3>Internal logs</h3>
-                    
+
                     <div class="extension-privacy-manager-vlak">
                         <div id="extension-privacy-manager-logs-list"></div>
                         <button type="button" id="extension-privacy-manager-button-delete-all-logs" class="text-button">Delete all internal logs</button>
                     </div>
-                    
+
                     <div class="extension-privacy-manager-vlak">
                         <p>The internal logs can be automatically deleted every hour.</p>
-                        <input type="checkbox" id="extension-privacy-manager-delete-internal-logs-checkbox" name="extension-privacy-manager-delete-internal-logs-checkbox"/><label for="extension-privacy-manager-delete-internal-logs-checkbox">Automatically delete</label><br/>
+                        <input type="checkbox" id="extension-privacy-manager-delete-internal-logs-checkbox" name="extension-privacy-manager-delete-internal-logs-checkbox" />
+                        <label for="extension-privacy-manager-delete-internal-logs-checkbox">Automatically delete</label><br />
                     </div>
-                    
-              </div>
+                </div>
 
+                <div id="extension-privacy-manager-tab-print" class="extension-privacy-manager-tab extension-privacy-manager-centered-page">
+                    <img id="extension-privacy-manager-pp-header" src="/extensions/privacy-manager/images/pp-printer-icon.svg" />
 
-              <div id="extension-privacy-manager-tab-print" class="extension-privacy-manager-tab extension-privacy-manager-centered-page">
-                    
-                    <img id="extension-privacy-manager-pp-header" src="/extensions/privacy-manager/images/pp-printer-icon.svg"/>
-                    
-                    <p>If you connect a PeriPage Bluetooth printer, then you can print your log data to paper at regular intervals. For example, each day at midnight you could print all the data that was collected during the day. After the print is complete, the log's data will be deleted from the system. So at the end of the day, the paper print will be the only copy of your data that remains.</p>
+                    <p>
+                        If you connect a PeriPage Bluetooth printer, then you can print your log data to paper at regular intervals. For example, each day at midnight you could print all the data that was collected during the day. After the
+                        print is complete, the log's data will be deleted from the system. So at the end of the day, the paper print will be the only copy of your data that remains.
+                    </p>
                     <p>This is an interesting option to have for very sensitive data. For example, you could print data about your health, and be sure that no digital copy remains.</p>
-                    
+
                     <h3>Step 1: Connect a printer</h3>
                     <div class="extension-privacy-manager-vlak">
-                        <p>If you have scanned for a printer and found it, it's details will be shown below. If no printer has been found yet, click on the scan button to initiate a Bluetooth scan. Make sure the printer is on and ready to connect before you start a scan.</p>
-                        <div id="extension-privacy-manager-printer-list"><span><span id="extension-privacy-manager-printer-connected"></span><span id="extension-privacy-manager-printer-list-name"></span></span> <span id="extension-privacy-manager-printer-list-mac"></span></div>
-                        <div id="extension-privacy-manager-print-busy-scanning" style="display:none">Scanning for PeriPage Printer...</div>
-                        <div id="extension-privacy-manager-print-test-progress" style="display:none">Trying to connect to the printer...</div>
-                    
+                        <p>
+                            If you have scanned for a printer and found it, it's details will be shown below. If no printer has been found yet, click on the scan button to initiate a Bluetooth scan. Make sure the printer is on and ready to
+                            connect before you start a scan.
+                        </p>
+                        <div id="extension-privacy-manager-printer-list">
+                            <span><span id="extension-privacy-manager-printer-connected"></span><span id="extension-privacy-manager-printer-list-name"></span></span> <span id="extension-privacy-manager-printer-list-mac"></span>
+                        </div>
+                        <div id="extension-privacy-manager-print-busy-scanning" style="display: none;">Scanning for PeriPage Printer...</div>
+                        <div id="extension-privacy-manager-print-test-progress" style="display: none;">Trying to connect to the printer...</div>
+
                         <div class="extension-privacy-manager-flex-align-right">
-                            <button type="button" class="btn text-button" id="extension-privacy-manager-print-test-button" style="display:none">Test connection</button>
+                            <button type="button" class="btn text-button" id="extension-privacy-manager-print-test-button" style="display: none;">Test connection</button>
                             <button type="button" class="btn text-button" id="extension-privacy-manager-start-bluetooth-scan-button">Bluetooth scan</button>
                         </div>
                     </div>
-                    
 
-                    
                     <h3>Step 2: Print settings</h3>
                     <div id="extension-privacy-manager-print-settings-container" class="extension-privacy-manager-vlak">
                         <h4>Log to print</h4>
@@ -356,10 +379,10 @@
                         <div id="extension-privacy-manager-printer-log-dropdown-container">
                             <!--<select id="extension-privacy-manager-printer-log-dropdown" class="localization-select">
                                 <option value="none">None</option>
-                            </select>--><div class="localization-select" style="padding: 0.8rem 0 0 1rem;height: 3rem">Loading...</div>
+                            </select>-->
+                            <div class="localization-select" style="padding: 0.8rem 0 0 1rem; height: 3rem;">Loading...</div>
                         </div>
-                    
-                    
+
                         <h4>Print interval</h4>
                         <p>Select the frequency at which the data should be printed and then deleted.</p>
                         <div id="extension-privacy-manager-printer-log-dropdown-container">
@@ -373,9 +396,12 @@
                                 <option value="weekly">Sunday at midnight</option>
                             </select>
                         </div>
-                    
+
                         <h4>Print rotation</h4>
-                        <p>You can rotate the image before it's printed. Using 270 degrees looks great, but will use more paper. If you set it to automatic, it will switch between no rotation and 270 degrees depending on how much data there is to print.</p>
+                        <p>
+                            You can rotate the image before it's printed. Using 270 degrees looks great, but will use more paper. If you set it to automatic, it will switch between no rotation and 270 degrees depending on how much data
+                            there is to print.
+                        </p>
                         <p>Be advised: if you have set the log to be printed at a rotation of 270 degrees, and if you have a large amount of collected data, then the print may be quite long.</p>
                         <div id="extension-privacy-manager-printer-log-dropdown-container">
                             <select id="extension-privacy-manager-printer-rotation-dropdown" class="localization-select">
@@ -386,75 +412,87 @@
                                 <option value="auto">Automatic</option>
                             </select>
                         </div>
-                        
+
                         <div class="extension-privacy-manager-flex-align-right">
                             <button type="button" class="btn text-button" id="extension-privacy-manager-set-print-button">Save settings</button>
                         </div>
-                        <div id="extension-privacy-manager-print-settings-saved" style="display:none">Settings were saved</div>
-                        <div id="extension-privacy-manager-print-settings-saved-error" style="display:none">Connection error, could not save settings</div>
+                        <div id="extension-privacy-manager-print-settings-saved" style="display: none;">Settings were saved</div>
+                        <div id="extension-privacy-manager-print-settings-saved-error" style="display: none;">Connection error, could not save settings</div>
                     </div>
-                    
+
                     <div id="extension-privacy-manager-clean-slate-container" class="extension-privacy-manager-show-if-printer-connected">
                         <h3>Print now</h3>
                         <div class="extension-privacy-manager-vlak">
-                            <p>Currently the log called <span id="extension-privacy-manager-selected-log-to-print" style="font-style:italic">...</span> is set to have it's data always printed, and then deleted, at regular intervals.</p>
+                            <p>Currently the log called <span id="extension-privacy-manager-selected-log-to-print" style="font-style: italic;">...</span> is set to have it's data always printed, and then deleted, at regular intervals.</p>
                             <p>If you want you can print all the collected data right now.</p>
                             <div class="extension-privacy-manager-flex-align-right">
                                 <button type="button" class="btn text-button" id="extension-privacy-manager-print-now-button">Print now</button>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div id="extension-privacy-manager-printable-icons-container" class="extension-privacy-manager-show-if-printer-connected">
                         <h3>Print icon</h3>
                         <div class="extension-privacy-manager-vlak">
-                            <p>It's possible to create a physical button which, when pressed, triggers the "quick delete" beauty filter. IKEA offers a nice push button that allows you to use your own paper icons. Here you can print an icon for that button to indicate that it will delete data. Click on an image to print it.</p>
+                            <p>
+                                It's possible to create a physical button which, when pressed, triggers the "quick delete" beauty filter. IKEA offers a nice push button that allows you to use your own paper icons. Here you can print an icon
+                                for that button to indicate that it will delete data. Click on an image to print it.
+                            </p>
                             <div id="extension-privacy-manager-printable-icons-list">
-                                <img data-filename="closed-eye-icon.png" src="/extensions/privacy-manager/images/closed-eye-icon-big.png" alt="closed eye icon"/>
-                                <img data-filename="closed-eye-icon.png" src="/extensions/privacy-manager/images/closed-eye-icon.png" alt="closed eye icon"/>
-                                <img data-filename="closed-eye-10min.png" src="/extensions/privacy-manager/images/closed-eye-10min.png" alt="closed eye icon"/>
-                                <img data-filename="closed-eye-20min.png" src="/extensions/privacy-manager/images/closed-eye-20min.png" alt="closed eye icon"/>
-                                <img data-filename="closed-eye-1hour.png" src="/extensions/privacy-manager/images/closed-eye-1hour.png" alt="closed eye icon"/>
-                                <img data-filename="closed-eye-2hours.png" src="/extensions/privacy-manager/images/closed-eye-2hours.png" alt="closed eye icon"/>
-                                <img data-filename="closed-eye-4hours.png" src="/extensions/privacy-manager/images/closed-eye-4hours.png" alt="closed eye icon"/>
-                                <img data-filename="closed-eye-8hours.png" src="/extensions/privacy-manager/images/closed-eye-8hours.png" alt="closed eye icon"/>
+                                <img data-filename="closed-eye-icon.png" src="/extensions/privacy-manager/images/closed-eye-icon-big.png" alt="closed eye icon" />
+                                <img data-filename="closed-eye-icon.png" src="/extensions/privacy-manager/images/closed-eye-icon.png" alt="closed eye icon" />
+                                <img data-filename="closed-eye-10min.png" src="/extensions/privacy-manager/images/closed-eye-10min.png" alt="closed eye icon" />
+                                <img data-filename="closed-eye-20min.png" src="/extensions/privacy-manager/images/closed-eye-20min.png" alt="closed eye icon" />
+                                <img data-filename="closed-eye-1hour.png" src="/extensions/privacy-manager/images/closed-eye-1hour.png" alt="closed eye icon" />
+                                <img data-filename="closed-eye-2hours.png" src="/extensions/privacy-manager/images/closed-eye-2hours.png" alt="closed eye icon" />
+                                <img data-filename="closed-eye-4hours.png" src="/extensions/privacy-manager/images/closed-eye-4hours.png" alt="closed eye icon" />
+                                <img data-filename="closed-eye-8hours.png" src="/extensions/privacy-manager/images/closed-eye-8hours.png" alt="closed eye icon" />
+                                <img data-filename="disable-voice-recognition.png" src="/extensions/privacy-manager/images/disable-voice-recognition.png" alt="Ask us to disable voice recognition" />
+                                <img data-filename="disable-data-collection.png" src="/extensions/privacy-manager/images/disable-data-collection.png" alt="Ask us to disable data collection" />
                             </div>
                         </div>
                     </div>
-                    
-              </div>
+                </div>
 
-
-              <div id="extension-privacy-manager-tab-help" class="extension-privacy-manager-tab">
+                <div id="extension-privacy-manager-tab-help" class="extension-privacy-manager-tab extension-privacy-manager-centered-page">
                     <h3>Help</h3>
-                    <p>This addon showcases a numer of privacy innovations that were conceptualised within the Candle Smart Home project. It's goal is to explore how we may protect privacy better, and improve and safeguard people's trust in smart systems.</p>
+                    <p>
+                        This addon showcases a numer of privacy innovations that were conceptualised within the Candle Smart Home project. It's goal is to explore how we may protect privacy better, and improve and safeguard people's trust
+                        in smart systems.
+                    </p>
                     <h4>Beauty filters</h4>
-                    <p>People use filter on their social media posts to remove things like wrinkles in their skin. If other people are getting to see your data, you may wish to massage it to look a little more socially acceptible too. That's what this section is for: experimenting with making your data "look good". This is useful because in some situations we're seen smart homes being used to surveil, shame or control people, sometimes even without their knowing.</p>
+                    <p>
+                        People use filter on their social media posts to remove things like wrinkles in their skin. If other people are getting to see your data, you may wish to massage it to look a little more socially acceptible too.
+                        That's what this section is for: experimenting with making your data "look good". This is useful because in some situations we're seen smart homes being used to surveil, shame or control people, sometimes even
+                        without their knowing.
+                    </p>
                     <h4>Data sculptor</h4>
-                    <p>Think of this as a precise scalpel to manipulate your data. You can remove, modify or even create data points. This is useful if, for example, you are planning a surprise birthday party and don't want your partner to figure out that you've been preparing.</p>
+                    <p>
+                        Think of this as a precise scalpel to manipulate your data. You can remove, modify or even create data points. This is useful if, for example, you are planning a surprise birthday party and don't want your partner to
+                        figure out that you've been preparing.
+                    </p>
                     <h4>Internal Logs</h4>
-                    <p>The control keeps internal logs of everything that happens in the system. Viewing these can give insight into behaviour, even if the other privacy protecting options are used. That's why you can delete the internal logs here.</p>
+                    <p>
+                        The control keeps internal logs of everything that happens in the system. Viewing these can give insight into behaviour, even if the other privacy protecting options are used. That's why you can delete the internal
+                        logs here.
+                    </p>
                     <h4>Print</h4>
-                    <p>By connecting a little Bluetooth printer, you can make sure that your sensor data isn't even stored on the smart home controller anymore. The data is turned into a paper trail, giving a new level of control over your data by making the data tangible. With a paper printout you can be sure there is only one copy, and it's very easy to dispose of that copy.</p><p>If you were, for example, collecting data about health or sexual activity, then this option might be very valuable.</p>
-              </div>
-          
+                    <p>
+                        By connecting a little Bluetooth printer, you can make sure that your sensor data isn't even stored on the smart home controller anymore. The data is turned into a paper trail, giving a new level of control over your
+                        data by making the data tangible. With a paper printout you can be sure there is only one copy, and it's very easy to dispose of that copy.
+                    </p>
+                    <p>If you were, for example, collecting data about health or sexual activity, then this option might be very valuable.</p>
+                </div>
+            </div>
 
-        </div>
-        
-        <div id="extension-privacy-manager-debug-warning" style="display:none">
-            <h2>Debugging is enabled</h2>
-            <p>This addon is currently set to save detailed information about its operation in the internal logs. This may impact your privacy, as this also means that insights into your behaviour might be stored in those logs.</p>
-        </div>
-        
-        <div id="extension-privacy-manager-response" style="display:none">
-            <p id="extension-privacy-manager-response-data"></p>
-        </div>
+            <div id="extension-privacy-manager-debug-warning" style="display: none;">
+                <h2>Debugging is enabled</h2>
+                <p>This addon is currently set to save detailed information about its operation in the internal logs. This may impact your privacy, as this also means that insights into your behaviour might be stored in those logs.</p>
+            </div>
 
+            <div id="extension-privacy-manager-response" style="display: none;">
+                <p id="extension-privacy-manager-response-data"></p>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
-
-
-
-
-

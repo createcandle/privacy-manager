@@ -11,6 +11,10 @@
     margin-top:2rem;
 }
 
+#extension-privacy-manager-view{
+    color:white;
+}
+
 #extension-privacy-manager-view .clicked{
 	background-color:rgba(255,255,255,.1);
 }
@@ -187,9 +191,9 @@
     background:none;
 }
 
-
-#extension-privacy-manager-content.extension-privacy-manager-active-tab-beauty-filters #extension-privacy-manager-tab-beauty-filters,
-#extension-privacy-manager-content.extension-privacy-manager-active-tab-data-sculptor #extension-privacy-manager-tab-data-sculptor,
+#extension-privacy-manager-content.extension-privacy-manager-active-tab-things #extension-privacy-manager-tab-things,
+#extension-privacy-manager-content.extension-privacy-manager-active-tab-filters #extension-privacy-manager-tab-filters,
+#extension-privacy-manager-content.extension-privacy-manager-active-tab-sculptor #extension-privacy-manager-tab-sculptor,
 #extension-privacy-manager-content.extension-privacy-manager-active-tab-internal-logs #extension-privacy-manager-tab-internal-logs,
 #extension-privacy-manager-content.extension-privacy-manager-active-tab-print #extension-privacy-manager-tab-print,
 #extension-privacy-manager-content.extension-privacy-manager-active-tab-help #extension-privacy-manager-tab-help{
@@ -197,8 +201,9 @@
 }
 
 
-#extension-privacy-manager-content.extension-privacy-manager-active-tab-beauty-filters #extension-privacy-manager-tab-button-beauty-filters,
-#extension-privacy-manager-content.extension-privacy-manager-active-tab-data-sculptor #extension-privacy-manager-tab-button-data-sculptor,
+#extension-privacy-manager-content.extension-privacy-manager-active-tab-things #extension-privacy-manager-tab-button-things,
+#extension-privacy-manager-content.extension-privacy-manager-active-tab-filters #extension-privacy-manager-tab-button-filters,
+#extension-privacy-manager-content.extension-privacy-manager-active-tab-sculptor #extension-privacy-manager-tab-button-sculptor,
 #extension-privacy-manager-content.extension-privacy-manager-active-tab-internal-logs #extension-privacy-manager-tab-button-internal-logs,
 #extension-privacy-manager-content.extension-privacy-manager-active-tab-print #extension-privacy-manager-tab-button-print,
 #extension-privacy-manager-content.extension-privacy-manager-active-tab-help #extension-privacy-manager--buttontab-help{
@@ -223,10 +228,37 @@
 
 
 
+/*  THINGS OVERVIEW  */
+
+/*
+#extension-privacy-manager-things-original-item{
+    display:none;
+}
+*/
+
+
+.extension-privacy-manager-things-edit-item{
+    margin-bottom:1rem;
+    background-color:rgba(0,0,0,.1);
+    padding:2rem;
+    border-radius:.5rem;
+    display:none;
+}
+
+#extension-privacy-manager-content .extension-privacy-manager-things-edit-item h4{
+    margin-top:1rem;
+}
+
+.extension-privacy-manager-things-edit-item-property{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+
 
 
 /*  PRINTER  */
-
 
 #extension-privacy-manager-pp-header{
     width: 40%;
@@ -597,7 +629,7 @@
 	background-color: LightGreen;
 }
 
-#extension-privacy-manager-tab-data-sculptor button{
+#extension-privacy-manager-tab-sculptor button{
     padding: 0.5rem 1rem
 }
 
@@ -754,7 +786,7 @@ INTERNAL LOGS
 	}
 	*/
 	
-	#extension-privacy-manager-data-sculptor{
+	#extension-privacy-manager-sculptor{
 		/*border:1px solid white;
 		padding:1rem;*/
 		display:flex;

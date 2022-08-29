@@ -27,7 +27,381 @@
         }
 
 
-        create_thing_list(logs_list) {
+
+
+    
+        generate_things_overview(scene_name){
+            
+            document.getElementById('extension-privacy-manager-view').scrollTop = 0;
+            
+            let list_el = document.getElementById('extension-privacy-manager-things-list-container');
+            list_el.innerHTML = "";
+            
+    		// Pre populating the original item that will be clones to create new ones
+    	    API.getThings().then((things) => {
+			
+                things.sort((a, b) => (a.title.toLowerCase() > b.title.toLowerCase()) ? 1 : -1) // sort alphabetically
+            
+    			this.all_things = things;
+    			if(this.debug){
+                    console.log("privacy_manager: debug: all things: ", things);
+                }
+			    
+    			// pre-populate the hidden 'new' item with all the thing names
+    			var thing_ids = [];
+    			var thing_titles = [];
+			
+    			for (let key in things){
+
+                    if( things[key].hasOwnProperty('properties') ){ // things without properties should be skipped (edge case)
+                        
+        				var thing_title = 'unknown';
+        				if( things[key].hasOwnProperty('title') ){
+        					thing_title = things[key]['title'];
+        				}
+        				else if( things[key].hasOwnProperty('label') ){ // very old addons sometimes used label instead of title
+        					thing_title = things[key]['label'];
+        				}
+				
+        				
+        				
+			
+        				var thing_id = things[key]['href'].substr(things[key]['href'].lastIndexOf('/') + 1);
+                        if(this.debug){
+                            console.log("thing_id: ", thing_id);
+                            console.log("thing_title: ", thing_title);
+                        }
+                        
+                        if(thing_id == 'scenes-thing'){
+                            //console.log("FOUND IT scenes-thing");
+                            continue;
+                        }
+                        
+                        if (thing_id.startsWith('highlights-') ){
+    						//console.log(thing_id + " starts with highlight-, so skipping.");
+    						continue;
+                        }
+                        
+                        //console.log("thing_title and ID: ", thing_title, thing_id);
+                        
+                        
+        				//thing_ids.push( things[key]['href'].substr(things[key]['href'].lastIndexOf('/') + 1) );
+
+                        var thing_container = document.createElement('div');
+                        thing_container.classList.add('extension-privacy-manager-things-edit-item')
+                        thing_container.dataset.thing_id = thing_id;
+                        
+                        thing_container.setAttribute('id','extension-privacy-manager-things-' + thing_id + '-container');
+                        
+                        /*
+                        var thing_checkbox = document.createElement('input');
+                        thing_checkbox.type = "checkbox";
+                        thing_checkbox.name = 'extension-privacy-manager-things-' + thing_id;
+                        thing_checkbox.id = 'extension-privacy-manager-things-' + thing_id;
+                        thing_checkbox.classList.add('extension-privacy-manager-things-edit-item-thing-checkbox');
+                        */
+                        
+                        var thing_label = document.createElement('h4');
+                        //thing_label.htmlFor = 'extension-privacy-manager-things-' + thing_id;
+                        //label.appendChild(checkbox);
+                        thing_label.appendChild(document.createTextNode(thing_title));
+                
+                    
+                    
+                        // ADD PROPERTIES CONTAINER TO THE THING CONTAINER
+                    
+                        var properties_container = document.createElement('div');
+                        properties_container.classList.add('extension-privacy-manager-things-edit-item-properties');
+                        properties_container.setAttribute('id','extension-privacy-manager-things-' + thing_id + '-properties');
+                        
+                        
+                        thing_container.appendChild(thing_label);
+                        thing_container.appendChild(properties_container);
+                        
+                        // Append edit view to the dom
+                        document.getElementById('extension-privacy-manager-things-list-container').appendChild(thing_container);
+                        
+                        
+                        
+                        var found_write_property = false;
+                        let properties = things[key]['properties'];
+                		for (let prop in properties){
+                			//console.log(properties[prop]);
+                			var property_title = 'unknown';
+                			if( properties[prop].hasOwnProperty('title') ){
+                				property_title = properties[prop]['title'];
+                			}
+                			else if( properties[prop].hasOwnProperty('label') ){
+                				property_title = properties[prop]['label'];
+                			}
+			
+                			var property_id = properties[prop]['forms'][0]['href'].substr(properties[prop]['forms'][0]['href'].lastIndexOf('/') + 1);
+                            //console.log("property_id: ", property_id);
+                            
+                            var read_only = false;
+                            if( typeof properties[prop]['readOnly'] != 'undefined'){
+                                if(properties[prop]['readOnly'] == true){
+                                    read_only = true;
+                                }
+                            }
+                            
+                            if(read_only == false){
+                                
+                                if(property_title != 'Data collection' && property_title != 'Data mute' && property_title != 'Data blur'){
+                                    continue;
+                                }
+                                
+                                let my_thing_id = thing_id;
+                                let my_property_id = property_id;
+                                let my_property_title = property_title;
+                                //console.log("my_thing_id early: ", my_thing_id);
+                                
+                                try{
+                                    // get actual current value of the property
+                                    API.getJson('/things/' + my_thing_id + '/properties/' + my_property_id)
+                                    .then((prop2) => {
+                                 
+                                        if(typeof prop2 == 'object'){
+                                            // gateway 1.0.0
+                                            if(Object.keys(prop2).length === 0 && this.debug){
+                                                console.log(property_id + " was Undefined");
+                                            }
+                                            else if(prop2[property_name] == null && this.debug){
+                                                console.log(property_id + " WAS NULL");
+                                            
+                                            }
+                                        }
+                                        else{
+                                            if(prop2 == null && this.debug){
+                                                console.log(property_id + " WAS NULL: ", prop2);
+                                            }
+                                        
+                                            let property_value = prop2; //properties[prop]['value'];
+                                            if(property_value == null){
+                                                property_value = 'unknown';
+                                            }
+                                
+                                            if(this.debug){
+                                                console.log(properties[prop]);
+                                                console.log("property_value: ", property_value);
+                                            }
+                                
+                                            // Create container for property
+                                            var property_container = document.createElement('div');
+                                            property_container.classList.add('extension-privacy-manager-things-edit-item-property');
+                                            property_container.dataset.property_id = property_id
+                                
+                                            // Property is part of scene checkbox
+                                            /*
+                                            var property_checkbox = document.createElement('input');
+                                            property_checkbox.type = "checkbox";
+                                            property_checkbox.name = 'extension-privacy-manager-things-' + thing_id + '---' + property_id;
+                                            property_checkbox.id = 'extension-privacy-manager-things-' + thing_id + '---' + property_id;
+                                            property_checkbox.classList.add('extension-privacy-manager-things-edit-item-property-checkbox');
+                                            */
+                                
+                                
+                                            // Create label for property
+                                            var property_label_el = document.createElement('label');
+                                            property_label_el.htmlFor = 'extension-privacy-manager-things-' + thing_id + '---' + property_id;
+                                            property_label_el.appendChild(document.createTextNode(my_property_title));
+                                
+                                
+                                
+                                
+                                            // Create input element for the property value
+                                            var input_el = document.createElement('input');
+                                            input_el.name = 'extension-privacy-manager-things-' + thing_id + '-----' + property_id;
+                                            input_el.id = 'extension-privacy-manager-things-' + thing_id + '-----' + property_id;
+                                            input_el.classList.add('extension-privacy-manager-things-edit-item-property-value');
+                                            input_el.dataset.thing_id = thing_id;
+                                            input_el.dataset.property_id = property_id;
+                    			
+                                            // Number property
+                                			if( properties[prop]['type'] == 'integer' || properties[prop]['type'] == 'float' || properties[prop]['type'] == 'number'){
+                                                // If a property is a number
+                			                    //console.log("number property spotted");
+                                                input_el.type = "number";
+                                			}
+                                
+                                            // Boolean property
+                                            else if( properties[prop]['type'] == 'boolean'){
+                                                //console.log("boolean property spotted");
+                                                input_el = document.createElement('select');
+                                                input_el.name = 'extension-privacy-manager-things-' + thing_id + '-----' + property_id;
+                                                input_el.id = 'extension-privacy-manager-things-' + thing_id + '-----' + property_id;
+                                                input_el.classList.add('extension-privacy-manager-things-edit-item-property-value');
+                                                input_el.classList.add('extension-privacy-manager-dropdown');
+                                                input_el.classList.add('localization-select');
+                                    
+                                    
+                                    
+                                                input_el.dataset.thing_id = thing_id;
+                                                input_el.dataset.property_id = property_id;
+                                    
+                                                var unknown_option = document.createElement("option");
+                                                unknown_option.value = 'unknown';
+                                                unknown_option.text = 'Unknown';
+                                                if(property_value.toString() == unknown_option.value){
+                                                    unknown_option.selected = true;
+                                                }
+                                                input_el.appendChild(unknown_option);
+                                    
+                                                var true_option = document.createElement("option");
+                                                true_option.value = 'true';
+                                                true_option.text = 'True';
+                                                if(property_value.toString() == true_option.value){
+                                                    true_option.selected = true;
+                                                }
+                                                input_el.appendChild(true_option);
+                                    
+                                                var false_option = document.createElement("option");
+                                                false_option.value = 'false';
+                                                false_option.text = 'False';
+                                                if(property_value.toString() == false_option.value){
+                                                    false_option.selected = true;
+                                                }
+                                                input_el.appendChild(false_option);
+                                    
+                                    
+                                            }
+                                
+                                            // Color property
+                                            else if( properties[prop]['type'] == 'color'){
+                                                //console.log("color property spotted");
+                                                input_el.type = "color";
+                                            }
+                                
+                                            // String property
+                                            else if( properties[prop]['type'] == 'string'){
+                                                //console.log("string property spotted");
+                                                input_el.type = "text";
+                                    
+                                                if(property_id == "color"){
+                                                    input_el.type = "color";
+                                                }
+                                    
+                                                if (typeof properties[prop]['enum'] != 'undefined'){
+                                                    //console.log('enum spotted');
+                                        
+                                                    input_el = document.createElement('select');
+                                                    input_el.name = 'extension-privacy-manager-things-' + thing_id + '-----' + property_id;
+                                                    input_el.id = 'extension-privacy-manager-things-' + thing_id + '-----' + property_id;
+                                                    input_el.classList.add('extension-privacy-manager-things-edit-item-property-value');
+                                                    input_el.classList.add('extension-privacy-manager-dropdown');
+                                                    input_el.classList.add('localization-select');
+                                                    input_el.dataset.thing_id = thing_id;
+                                                    input_el.dataset.property_id = property_id;
+                                        
+                                                    for (var i = 0; i < properties[prop]['enum'].length; i++) {
+                                                        var option = document.createElement("option");
+                                                        option.value = properties[prop]['enum'][i];
+                                                        option.text = properties[prop]['enum'][i];
+                                                        if(property_value == option.value){
+                                                            option.selected = true;
+                                                        }
+                                                        input_el.appendChild(option);
+                                                    }
+                                        
+                                        
+                                        
+                                                }
+                                            }
+                                
+                                            // unsupported property
+                                            else{
+                                                if(this.debug){
+                                                    console.log("Scenes: Warning, unsupported property type. Skipping");
+                                                }
+                                                //continue;
+                                            }
+                                
+                                            // Automatically check the checkbox if the property is changed
+                                            input_el.addEventListener('change', (event) => {
+                    	                        if(this.debug){
+                    	                            console.log("privacy manager: things: property value changed. Event: ", event);
+                    	                            console.log("input_el: ", input_el);
+                                                    console.log("event.target.value: ", event.target.value);
+                                                }
+                                    
+                                    
+                                                API.putJson(`/things/${my_thing_id}/properties/${my_property_id}`, event.target.value);
+                                    
+                                                //console.log("event.currentTarget.parentNode: ", event.currentTarget.parentNode);
+                                                //const parent_el = event.currentTarget.closest('.extension-privacy-manager-things-edit-item-property');
+                                                //const checkbox_sibling = parent_el.getElementsByClassName('extension-privacy-manager-things-edit-item-property-checkbox')[0];
+                                                //checkbox_sibling.checked = true;
+                                            });
+                                
+                                
+                                            // Add property element to the property container
+                                            //property_container.appendChild(property_checkbox);
+                                            property_container.appendChild(property_label_el);
+                                            property_container.appendChild(input_el);
+                                
+                                            document.getElementById('extension-privacy-manager-things-' + my_thing_id + '-properties').appendChild(property_container);
+                                            document.getElementById('extension-privacy-manager-things-' + my_thing_id + '-container').style.display = 'block';
+                                
+                                
+                                            // Add the property container to the thing container
+                                            //properties_container.appendChild(property_container);
+                                        
+                                        }
+                            
+                            
+                                    })
+                                    .catch((err) => {
+                                        console.log("privacy manager: API error getting fresh property value: ", err);
+                                    });
+                                    found_write_property = true;
+                                }
+                                catch(e){
+                                    console.log("Error getting fresh property value: ", e);
+                                }
+                                
+                                
+                                
+                            }
+                			
+                		}
+                    
+                        /*
+                        // Add thing container to the edit overview
+                        if(found_write_property){
+                            //thing_container.appendChild(thing_checkbox);
+                            thing_container.appendChild(thing_label);
+                            thing_container.appendChild(properties_container);
+                            
+                            // Append edit view to the dom
+                            document.getElementById('extension-privacy-manager-things-list-container').appendChild(thing_container);
+                        }
+                        else{
+                            if(this.debug){
+                                console.log('scenes:debug: thing has no writeable properties: ', thing_id);
+                            }
+                        }
+                        */
+
+                    }
+    			}
+    	    });
+            
+        } // end of edit_scene
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+        // Sculptor things list
+        create_sculptor_thing_list(logs_list) {
             //console.log("Creating main thing list");
 
             const pre = document.getElementById('extension-privacy-manager-response-data');
@@ -399,15 +773,16 @@
             const thing_list = document.getElementById('extension-privacy-manager-thing-list');
             const dataviz = document.getElementById('extension-privacy-manager-thing-dataviz');
 
-            const tab_button_sculptor = document.getElementById('extension-privacy-manager-tab-button-data-sculptor');
+            const tab_button_sculptor = document.getElementById('extension-privacy-manager-tab-button-sculptor');
             const tab_button_internal = document.getElementById('extension-privacy-manager-tab-button-internal-logs');
-            const tab_button_quick = document.getElementById('extension-privacy-manager-tab-button-beauty-filters');
+            const tab_button_things = document.getElementById('extension-privacy-manager-tab-button-things');
+            const tab_button_quick = document.getElementById('extension-privacy-manager-tab-button-filters');
             const tab_button_print = document.getElementById('extension-privacy-manager-tab-button-print');
             const tab_button_help = document.getElementById('extension-privacy-manager-tab-button-help');
 
-            const tab_sculptor = document.getElementById('extension-privacy-manager-tab-data-sculptor');
+            const tab_sculptor = document.getElementById('extension-privacy-manager-tab-sculptor');
             const tab_internal = document.getElementById('extension-privacy-manager-tab-internal-logs');
-            const tab_quick = document.getElementById('extension-privacy-manager-tab-beauty-filters');
+            const tab_quick = document.getElementById('extension-privacy-manager-tab-filters');
             const tab_print = document.getElementById('extension-privacy-manager-tab-print');
             const tab_help = document.getElementById('extension-privacy-manager-tab-help');
 
@@ -452,17 +827,25 @@
 
             
             // TABS
-
             document.getElementById('extension-privacy-manager-tab-buttons-container').addEventListener('click', (event) => {
                 var active_tab = event.target.innerText.toLowerCase().replace(/\s/g , "-");
-               // console.log(active_tab);
                 if(event.target.classList[0] == "extension-privacy-manager-main-tab-button"){
-                    //console.log("clicked on menu tab button");
                     if(active_tab == "?"){active_tab = "help";}
+                    console.log("clicked on privay manager menu tab button: ", active_tab);
+                    
+                    if(this.debug){
+                        console.log("clicked on privay manager menu tab button: ", active_tab);
+                    }
                     document.getElementById('extension-privacy-manager-content').className = 'extension-privacy-manager-active-tab-' + active_tab;
                 }
             });
             
+
+            // Print
+            tab_button_things.addEventListener('click', (target) => {
+                //this.scan_for_printer();
+                this.generate_things_overview();
+            });
 
             
             // Print
@@ -557,7 +940,7 @@
                     if(body.printer_connected == false){
                         alert("Could not connect to printer. Try turning it on and off again.");
                     }
-                    else{
+                    else if(this.debug){
                         console.log("Printer connection test was succesful");
                         //alert("Printer is connected");
                     }
@@ -692,16 +1075,18 @@
             ).then((body) => {
                 //console.log("Privacy manager init data: ", body);
                 //thing_list.innerText = body['data'];
-                //this.create_thing_list(body['logs']);
+                //this.create_sculptor_thing_list(body['logs']);
                 
                 
                 
                 
                 if(typeof body.debug != 'undefined'){
+                    this.debug = body.debug;
                     if(body.debug){
                         if(document.getElementById('extension-privacy-manager-debug-warning') != null){
                             document.getElementById('extension-privacy-manager-debug-warning').style.display = 'block';
                         }
+                        console.log("privacy manager init response: ", body);
                     }
                 }
                 
@@ -735,15 +1120,12 @@
             });
             
 
+            // Generate initial things overview
+            this.generate_things_overview();
 
 
 
-
-            //
-            // INITIALISE INTERNAL LOGS BUTTONS
-            //
-
-            // DELETE ALL INTERNAL LOGS
+            // DELETE ALL INTERNAL LOGS BUTTON
             document.getElementById('extension-privacy-manager-button-delete-all-logs').addEventListener('click', () => {
                 //console.log("clicked delete all internal logs");
                 this.delete_internal_logs("all");
@@ -786,9 +1168,11 @@
                 `/extensions/${this.id}/api/sculptor_init` //,{'init':1}
 
             ).then((body) => {
-                //console.log(body);
+                if(this.debug){
+                    console.log("Data sculptor init response: ", body);
+                }
                 //thing_list.innerText = body['data'];
-                this.create_thing_list(body['logs']);
+                this.create_sculptor_thing_list(body['logs']);
 
             }).catch((e) => {
                 //pre.innerText = e.toString();
@@ -944,6 +1328,9 @@
 
 
         show_internal_logs(file_list) {
+            if(this.debug){
+                console.log("in show_internal_logs. File list: ", file_list);
+            }
             try{
                 const pre = document.getElementById('extension-privacy-manager-response-data');
                 const logs_list = document.getElementById('extension-privacy-manager-logs-list');
@@ -1036,7 +1423,9 @@
         //
 
         scan_for_printer(){
-            //console.log("scan_for_printer was called. Calling API for /printer_scan");
+            if(this.debug){
+                console.log("scan_for_printer was called. Calling API for /printer_scan");
+            }
             document.getElementById('extension-privacy-manager-print-busy-scanning').style.display = 'block';
             document.getElementById('extension-privacy-manager-start-bluetooth-scan-button').style.display = 'none';
             
@@ -1054,7 +1443,7 @@
                 
                 
                 //thing_list.innerText = body['data'];
-                //this.create_thing_list(body['logs']);
+                //this.create_sculptor_thing_list(body['logs']);
                 //this.create_printer_ui(body, true);
                 document.getElementById('extension-privacy-manager-print-busy-scanning').style.display = 'none';
                 document.getElementById('extension-privacy-manager-start-bluetooth-scan-button').style.display = 'block';
@@ -1277,7 +1666,7 @@
                 document.getElementById('extension-privacy-manager-printer-list-mac').innerText = body['persistent']['printer_mac'];
                 
                 //thing_list.innerText = body['data'];
-                //this.create_thing_list(body['logs']);
+                //this.create_sculptor_thing_list(body['logs']);
                 //this.create_printer_ui(body, true);
                 //document.getElementById('extension-privacy-manager-print-busy-scanning').style.display = 'none';
                 //document.getElementById('extension-privacy-manager-start-bluetooth-scan-button').style.display = 'block';

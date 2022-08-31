@@ -36,6 +36,7 @@
             
             let list_el = document.getElementById('extension-privacy-manager-things-list-container');
             list_el.innerHTML = "";
+            var at_least_on_thing_shown = false; // how many things with settings are shown in the UI
             
     		// Pre populating the original item that will be clones to create new ones
     	    API.getThings().then((things) => {
@@ -264,6 +265,10 @@
                                                 input_el.appendChild(false_option);
                                     
                                     
+                                                if(at_least_on_thing_shown == false){
+                                                    at_least_on_thing_shown = true;
+                                                    document.getElementById('extension-privacy-manager-no-things-warning').style.display = 'none';
+                                                };
                                             }
                                 
                                             // Color property
@@ -303,7 +308,10 @@
                                                         input_el.appendChild(option);
                                                     }
                                         
-                                        
+                                                    if(at_least_on_thing_shown == false){
+                                                        at_least_on_thing_shown = true;
+                                                        document.getElementById('extension-privacy-manager-no-things-warning').style.display = 'none';
+                                                    };
                                         
                                                 }
                                             }

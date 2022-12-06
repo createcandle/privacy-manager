@@ -638,7 +638,7 @@
                 // Points mouse events
                 points_g.selectAll("circle")
                     .on("mouseover", function(d) {
-                        console.log("point hover: ", this, d);
+                        //console.log("point hover: ", this, d);
                         this.setAttribute('fill-opacity', 1);
                         this.setAttribute('r', 7);
                         
@@ -663,7 +663,7 @@
                     })
                     .on("mouseout", function(d) {
                         //console.log(this);
-                        console.log("point stop hover: ", this);
+                        //console.log("point stop hover: ", this);
                         document.getElementById('extension-privacy-manager-sculptor-hoverer').style.display = 'none';
                         this.setAttribute('fill-opacity', .5);
                         this.setAttribute('r', 5);

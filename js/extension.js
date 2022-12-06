@@ -183,8 +183,7 @@
                                             }
                                 
                                             if(this.debug){
-                                                console.log(properties[prop]);
-                                                console.log("property_value: ", property_value);
+                                                console.log("privacy manager debug: property and property_value: ", properties[prop], property_value);
                                             }
                                 
                                             // Create container for property
@@ -441,7 +440,8 @@
                 
                 
                 node.onclick = function() {
-                    this_object.thing_list_click(this)
+                    document.getElementById('extension-privacy-manager-thing-options').style.display = 'none';
+                    this_object.thing_list_click(this);
                 };
                 node.appendChild(textnode);
                 thing_list.appendChild(node);
@@ -638,12 +638,33 @@
                 // Points mouse events
                 points_g.selectAll("circle")
                     .on("mouseover", function(d) {
-                        //console.log(this);
+                        console.log("point hover: ", this, d);
                         this.setAttribute('fill-opacity', 1);
                         this.setAttribute('r', 7);
+                        
+                        const cx = parseInt(this.getAttribute('cx'));
+                        const cy = parseInt(this.getAttribute('cy'));
+                        
+                        if(cx > 40){ // && cy < 350
+                            const hoverer = document.getElementById('extension-privacy-manager-sculptor-hoverer');
+                            const hoverer_value = document.getElementById('extension-privacy-manager-sculptor-hoverer-value');
+                            hoverer_value.innerText = parseFloat(this.getAttribute('data-value')).toFixed(2);
+                            hoverer.style.display = 'block';
+                        
+                            //hoverer.style.left = this.getAttribute('cx' ) + 'px';
+                        
+                            hoverer.style.width = 50 + cx + 'px';
+                            hoverer.style.top = 20 + cy + 'px';
+                        }
+                        
+                        
+                        //hoverer.style.height = this.getAttribute('cy' ) + 'px';
+                        
                     })
                     .on("mouseout", function(d) {
-                        //console.log(this);	
+                        //console.log(this);
+                        console.log("point stop hover: ", this);
+                        document.getElementById('extension-privacy-manager-sculptor-hoverer').style.display = 'none';
                         this.setAttribute('fill-opacity', .5);
                         this.setAttribute('r', 5);
                     })
@@ -758,6 +779,8 @@
             });
 
         }
+
+
 
 
 

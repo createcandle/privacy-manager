@@ -497,10 +497,11 @@
 }
 
 #extension-privacy-manager-thing-dataviz{
-	padding:1rem 0 0 0;
+	padding:10px 0 0 0;
 	overflow: hidden;
 	height:400px;
     background-color:rgba(255,255,255,.1);
+    position:relative;
 }
 
 
@@ -606,6 +607,32 @@
 }
 
 
+
+#extension-privacy-manager-sculptor-hoverer{
+    display:none;
+    position:absolute;
+    left:0;
+    top:0;
+    width:3px;
+    height:400px;
+    border-right:1px solid rgba(255,255,255,.3);
+    border-top:1px solid rgba(255,255,255,.3);
+    text-align:right;
+    pointer-events: none;
+}
+
+#extension-privacy-manager-sculptor-hoverer-value{
+    float:right;
+    background-color:white;
+    color:black;
+    cursor:pointer;
+    pointer-events: none;
+    border-radius:.5rem;
+    padding:.3rem .5rem;
+    position:relative;
+    top:-45px;
+    right:-25px;
+}
 
 
 /*  BUTTONS */

@@ -71,6 +71,7 @@ class PrivacyManagerAPIHandler(APIHandler):
         self.duration_lookup_table = {'1':'1 minute',
                                     '10':'10 minutes',
                                     '20':'20 minutes',
+                                    '30':'30 minutes',
                                     '60':'1 hour',
                                     '120':'2 hours',
                                     '240':'4 hours',
@@ -727,7 +728,8 @@ class PrivacyManagerAPIHandler(APIHandler):
                               content=json.dumps({'state' : state, 'data' : data}),
                             )
                         except Exception as ex:
-                            print("Error getting thing data: " + str(ex))
+                            if self.DEBUG:
+                                print("Error getting thing data: " + str(ex))
                             return APIResponse(
                               status=500,
                               content_type='application/json',
@@ -739,26 +741,38 @@ class PrivacyManagerAPIHandler(APIHandler):
                             
                     elif request.path == '/point_delete':
                         if self.DEBUG:
-                            print("POINT DELETE CALLED")
+                            print("POINT DELETE CALLED. request.body: ", request.body)
                         try:
                             data = []
                             
-                            target_data_type = self.data_types_lookup_table[int(request.body['property_id'])]
-                            print("target data type from internal lookup table: " + str(target_data_type))
+                            action = request.body['action']
                             
-                            data = self.point_delete(str(request.body['property_id']), target_data_type, str(request.body['start_date']), str(request.body['end_date']) ) #new_value,date,property_id
+                            
+                            target_data_type = self.data_types_lookup_table[int(request.body['property_id'])]
+                            if self.DEBUG:
+                                print("target data type from internal lookup table: " + str(target_data_type))
+                            
+                            if action.endswith('above') or action.endswith('below'):
+                                value = request.body['value']
+                                data = self.point_delete(str(request.body['property_id']), target_data_type, "", "", str(action), value ) #new_value,date,property_id
+                            else:
+                                data = self.point_delete(str(request.body['property_id']), target_data_type, str(request.body['start_date']), str(request.body['end_date']), str(action), None ) #new_value,date,property_id
+                            
+                            # Check if an error string was returned, or an updated array or data points
                             if isinstance(data, str):
                                 state = 'error'
                             else:
                                 state = 'ok'
                             
+                            if self.DEBUG:
+                                print("point delete succes state?: " + str(state))
                             return APIResponse(
                               status=200,
                               content_type='application/json',
                               content=json.dumps({'state' : state, 'data' : data}),
                             )
                         except Exception as ex:
-                            print("Error deleting point(s): " + str(ex))
+                            print("API: Error deleting point(s): " + str(ex))
                             return APIResponse(
                               status=500,
                               content_type='application/json',
@@ -1086,19 +1100,59 @@ class PrivacyManagerAPIHandler(APIHandler):
     # DELETE POINT(S)
     # NOTE: turn timestamp into milliseconds version (as javascript does)
     
-    def point_delete(self,property_id,data_type,start_date,end_date):
+    def point_delete(self,property_id,data_type="error",start_date=0,end_date=0,action=None,value=None):
 
         result = []
         
         if property_id == None:
             if self.DEBUG:
-                print("No property ID provided")
-            return result
+                print("point_delete: no property ID provided")
+            return "no property ID provided"
         
         if not data_type in ("metricsBoolean", "metricsNumber", "metricsOther"):
             if self.DEBUG:
-                print("data_type not of allowed type")
-            return result
+                print("point_delete: data_type not of allowed type: " + str(data_type))
+            return "data_type not of allowed type"
+
+        
+        
+        if value != None:
+            #value = float(value)
+            
+            if data_type == "metricsBoolean":
+                if float(value) >= 1:
+                    value = 1
+                else:
+                    value = 0
+            elif data_type == "metricsNumber":
+                try:
+                    value = float(value)
+                    #value = int(value)
+                except:
+                    if self.DEBUG:
+                        print('value to float failed?')
+                    return 'value to float failed?'
+                    pass
+                   # value = float(value)
+            else:
+                # I'm not sure there even are any logs like this at the moment
+                value = float(value)
+                   
+        
+        """
+        try:
+            new_date = int(new_date)
+            old_date = int(old_date)
+            property_id = int(property_id)
+        except:
+            #if self.DEBUG:
+            #    print("Error: the date and/or property strings could not be turned into an int")
+            return "error"
+        """
+        
+        
+        
+        
         
         #if self.DEBUG:
         #    print("Delete from " + str(start_date))
@@ -1108,19 +1162,54 @@ class PrivacyManagerAPIHandler(APIHandler):
         
         try:
             db = sqlite3.connect(self.log_db_path)
-        except Exception as e:
+        except Exception as ex:
             if self.DEBUG:
-                print("Error opening log file: " + str(e))
-            return []
+                print("point_delete: error connecting to log database: " + str(ex))
+            return "error connecting to log database"
             
         try:
             cursor = db.cursor()
             
-            cursor.execute("DELETE FROM " + data_type + " WHERE id=? AND date>=? AND date<=?", (property_id,start_date,end_date,))
             #if self.DEBUG:
-            #    print("cursor.rowcount after deletion = " + str(cursor.rowcount))
+            #    print("cursor.rowcount before deletion = " + str(cursor.rowcount))
+            
+            
+            #if self.DEBUG:
+            #    test = "DELETE FROM " + data_type + " WHERE id=? AND date>=? AND date<=?", (property_id,start_date,end_date,)
+            #    print("QUERY: " + str(test))
+            
+            if action == 'delete-below':
+                cursor.execute("DELETE FROM " + data_type + " WHERE id=? AND value<?", (property_id,value,))
+            
+            elif action == 'delete-above':
+                #print("delete above value: " + str(value))
+                cursor.execute("DELETE FROM " + data_type + " WHERE id=? AND value>?", (property_id,value,))
+            
+            # These two below aren't currently used. The issue is that the user might not have full understanding of which adjacent points have the same value, and delete more than planned.
+            elif action == 'delete-and-below':
+                cursor.execute("DELETE FROM " + data_type + " WHERE id=? AND value<=?", (property_id,value,))
+                
+            elif action == 'delete-and-above':
+                cursor.execute("DELETE FROM " + data_type + " WHERE id=? AND value>=?", (property_id,value,))
+            
+            # In the future a user could even select a narrow band. Maybe called "value-between"?
+            #elif action == 'delete-value-between-above':
+                #cursor.execute("DELETE FROM " + data_type + " WHERE id=? AND value>=? AND value<=?", (property_id,start_date,end_date,))
+
+            # All the other ones are based on a time window, and can be handled with one command because the JS pre-calculates the time range.
+            # For a single point the start and end time are simply the same.
+            else:
+                cursor.execute("DELETE FROM " + data_type + " WHERE id=? AND date>=? AND date<=?", (property_id,start_date,end_date,))
+            
+            if self.DEBUG:
+                print("cursor.rowcount after deletion = " + str(cursor.rowcount))
+            
+            
             
             if cursor.rowcount > 0:
+                if self.DEBUG:
+                    print("point was found in the database. Rowcount: " + str(cursor.rowcount))
+                
                 db.commit()
                 result = []
                 #cursor.close()
@@ -1135,23 +1224,27 @@ class PrivacyManagerAPIHandler(APIHandler):
                     result.append( {'date':row[0],'value':row[1]} )
                 
             else:
-                result = []
+                if self.DEBUG:
+                    print("Error, point(s) not found in the database?")
+                result = "No matching point(s) found"
             
             #if self.DEBUG:
             #    print("log data after point_delete: " + str(result))
             db.close()
             return result
     
-        except Exception as e:
-            #if self.DEBUG:
-            #    print("Error deleting a point: " + str(e))
+        except Exception as ex:
+            if self.DEBUG:
+                print("point_delete: error deleting a point: " + str(ex))
             try:
                 db.close()
-            except:
+            except Exception as ex:
+                if self.DEBUG:
+                    print("point_delete: cleanly closing the log data database also failed: " + str(ex))
                 pass
-            return "Error deleting a point: " + str(e)
+            return "Error deleting a point: " + str(ex)
         
-
+        print("Privacy manager: I should not happen.")
 
 
 

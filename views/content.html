@@ -50,7 +50,7 @@
 
 
                 <div id="extension-privacy-manager-tab-sculptor" class="extension-privacy-manager-tab">
-                    <h3>Data sculptor</h3>
+                    <!--<h3>Data sculptor</h3>-->
                     <div id="extension-privacy-manager-sculptor">
                         <div id="extension-privacy-manager-thing-left">
                             <ul id="extension-privacy-manager-thing-list">
@@ -72,6 +72,7 @@
                             </div>
                             <div id="extension-privacy-manager-thing-options">
                                 <div id="extension-privacy-manager-thing-options-holder">
+                                    <div id="extension-privacy-manager-sculptor-delete-failed-message">Something went wrong</div>
                                     <h4>Selected point</h4>
                                     <input type="hidden" id="extension-privacy-manager-input-change-property-id" name="extension-privacy-manager-property-id" />
                                     <input type="hidden" id="extension-privacy-manager-input-change-data-type" name="extension-privacy-manager-data-type" />
@@ -315,7 +316,7 @@
                                     </div>
 
                                     <div>
-                                        <input type="text" id="extension-privacy-manager-input-change-value" name="extension-privacy-manager-new-value" />
+                                        <input type="text" id="extension-privacy-manager-input-change-value" name="extension-privacy-manager-new-value" placeholder="Value"/>
                                     </div>
 
                                     <div id="extension-privacy-manager-options-pane-buttons" class="extension-privacy-manager-inline">
@@ -326,6 +327,13 @@
                                         <button type="button" id="extension-privacy-manager-button-delete-point" class="extension-privacy-manager-button">Delete</button>
                                         <button type="button" id="extension-privacy-manager-button-delete-before" class="extension-privacy-manager-button extension-privacy-manager-button-extra">Delete, and all before</button>
                                         <button type="button" id="extension-privacy-manager-button-delete-after" class="extension-privacy-manager-button extension-privacy-manager-button-extra">Delete, and all after</button>
+                                        
+                                        <button type="button" id="extension-privacy-manager-button-delete-below" class="extension-privacy-manager-button extension-privacy-manager-button-extra">Delete below</button>
+                                        <button type="button" id="extension-privacy-manager-button-delete-above" class="extension-privacy-manager-button extension-privacy-manager-button-extra">Delete above</button>
+                                        <!--
+                                        <button type="button" id="extension-privacy-manager-button-delete-and-below" class="extension-privacy-manager-button extension-privacy-manager-button-extra">Delete, and all below</button>
+                                        <button type="button" id="extension-privacy-manager-button-delete-and-above" class="extension-privacy-manager-button extension-privacy-manager-button-extra">Delete, and all above</button>
+                                        -->
                                     </div>
                                 </div>
                                 <div id="extension-privacy-manager-thing-options-value"></div>

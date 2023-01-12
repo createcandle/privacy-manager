@@ -15,7 +15,7 @@
     color:white;
 }
 
-#extension-privacy-manager-view .clicked{
+#extension-privacy-manager-view .extension-privacy-manager-clicked{
 	background-color:rgba(255,255,255,.1);
 }
 
@@ -513,6 +513,8 @@
 #extension-privacy-manager-thing-dataviz-svg{
 	/*width:800px;
 	height:500px;*/
+    width:100%!important;
+    max-width:100%!important;
 	overflow:visible;
 }
 
@@ -633,6 +635,17 @@
     top:-45px;
     right:-25px;
 }
+
+
+#extension-privacy-manager-sculptor-delete-failed-message{
+    display:none;
+    background-color:#900;
+    color:white;
+    text-align:center;
+    padding:2rem;
+    margin:1rem 0;
+}
+
 
 
 /*  BUTTONS */
@@ -784,6 +797,12 @@ INTERNAL LOGS
 }
 
 
+@media screen and (max-width: 640px) {
+    #extension-privacy-manager-tab-sculptor{
+        padding-bottom:50vh;
+    }
+}
+
 
 @media screen and (min-width: 801px) {
 	#extension-privacy-manager-view{
@@ -818,8 +837,10 @@ INTERNAL LOGS
 		padding:1rem;*/
 		display:flex;
 		/*flex-wrap:wrap;*/
-        height:90vh;
-        min-height: 80rem;
+        height: 100vh; 
+        /*height: calc(100vh - 25rem);*/
+        min-height: 60rem;
+        margin-top:2rem;
 	}	
 	
 	#extension-privacy-manager-thing-left{

@@ -358,7 +358,7 @@
                             
                                     })
                                     .catch((err) => {
-                                        console.log("privacy manager: API error getting fresh property value: ", err);
+                                        console.log("privacy manager: generating things overview: API error getting fresh property value. Device probably not connected: ", err);
                                     });
                                     found_write_property = true;
                                 }
@@ -409,44 +409,125 @@
 
         // Sculptor things list
         create_sculptor_thing_list(logs_list) {
-            //console.log("Creating main thing list");
-
-            const pre = document.getElementById('extension-privacy-manager-response-data');
-            const thing_list = document.getElementById('extension-privacy-manager-thing-list');
-            thing_list.innerHTML = "";
-
-            for (var key in logs_list) {
-                //console.log(key);
-                var dataline = JSON.parse(logs_list[key]['name']);
-                //console.log(Object.keys(dataline));
-
-                var this_object = this;
-                //console.log(this_object);
-
-                var node = document.createElement("LI"); // Create a <li> node
-                node.setAttribute("data-property-id", logs_list[key]['id']);
-                node.setAttribute("data-data-type", logs_list[key]['data_type']);
-                
-                /*
-                var human_readable_thing_title = dataline['thing'];
-                if (human_readable_thing_title in this.thing_title_lookup_table) {
-                    human_readable_thing_title = this.thing_title_lookup_table[human_readable_thing_title];
-                }
-                */
-                
-                const nice_name = this.get_thing_and_property_string(dataline['thing'],dataline['property']);
-                //console.log("nice name: " + nice_name);
-                var textnode = document.createTextNode( nice_name ); // Create a text node
-                
-                
-                node.onclick = function() {
-                    document.getElementById('extension-privacy-manager-thing-options').style.display = 'none';
-                    this_object.thing_list_click(this);
-                };
-                node.appendChild(textnode);
-                thing_list.appendChild(node);
+            if(this.debug){
+                console.log("privacy manager: in create_sculptor_thing_list. logs_list: ", logs_list);
             }
-            pre.innerText = "";
+            
+            try{
+                const pre = document.getElementById('extension-privacy-manager-response-data');
+                const thing_list = document.getElementById('extension-privacy-manager-thing-list');
+                thing_list.innerHTML = "";
+
+                /*
+                logs_list = logs_list.sort((a, b) => {
+                  return a.localeCompare(b, undefined, {sensitivity: 'base'});
+                });
+                */
+
+
+                for (var key in logs_list) {
+                    //console.log(key);
+                    let dataline = JSON.parse(logs_list[key]['name']);
+
+                    // Create the nice name string
+                    const nice_name = this.get_thing_and_property_string(dataline['thing'],dataline['property']);
+                    logs_list[key]['nice_name'] = nice_name;
+                
+                    // If the generated nicename is the same as the thing name, that indicates the device is not available.
+                    if(nice_name == dataline['thing']){
+                        logs_list[key]['missing'] = true;
+                        logs_list[key]['nice_name'] = nice_name + " " + dataline['property'];
+                    }
+                    else{
+                        logs_list[key]['missing'] = false;
+                    }
+                    //const nice_name = this.get_thing_and_property_string(dataline['thing'],dataline['property']);
+                }
+            
+                // Sort the list
+                /*
+                logs_list = logs_list.sort((a, b) => {
+                  return a.localeCompare(b, undefined, {sensitivity: 'base'});
+                });
+                */
+                /*
+                logs_list = new Array([...logs_list].sort(([k, v], [k2, v2])=> {
+                    if(typeof v.nicename != 'undefined' && typeof v2.nicename != 'undefined'){
+                        const v_nicename = v.nicename.toLowerCase();
+                        const v2_nicename = v2.nicename.toLowerCase();
+                        if (v_nicename > v2_nicename) {
+                          return 1;
+                        }
+                        if (v_nicename < v2_nicename) {
+                          return -1;
+                        }
+                        return 0;
+                    }
+                }));
+                */
+            
+            
+                // Sort the logs list by nice name
+                function alphabetical_sort(a,b) {
+                    if(typeof a.nice_name != 'undefined' && typeof b.nice_name != 'undefined'){
+                        const a_nicename = a.nice_name.toLowerCase();
+                        const b_nicename = b.nice_name.toLowerCase();
+                        if (a_nicename > b_nicename) {
+                          return 1;
+                        }
+                        if (a_nicename < b_nicename) {
+                          return -1;
+                        }
+                        return 0;
+                    }else{
+                        console.warn('alphabetical_sort: no nicename in object');
+                    }
+                }
+                logs_list.sort(alphabetical_sort);
+                if(this.debug){
+                    console.log("sorted logs list with nicenames: ", logs_list);
+                }
+            
+                for (var key in logs_list) {
+                    //console.log(key);
+                    //var dataline = JSON.parse(logs_list[key]['name']);
+                    //console.log(Object.keys(dataline));
+
+                    //var this_object = this;
+                    //console.log(this_object);
+                
+                    if(logs_list[key]['missing'] == false ){
+                        var node = document.createElement("LI"); // Create a <li> node
+                        node.setAttribute("data-property-id", logs_list[key]['id']);
+                        node.setAttribute("data-data-type", logs_list[key]['data_type']);
+                
+                        /*
+                        var human_readable_thing_title = dataline['thing'];
+                        if (human_readable_thing_title in this.thing_title_lookup_table) {
+                            human_readable_thing_title = this.thing_title_lookup_table[human_readable_thing_title];
+                        }
+                        */
+                
+                        //const nice_name = this.get_thing_and_property_string(dataline['thing'],dataline['property']);
+                        //console.log("nice name: " + nice_name);
+                        var textnode = document.createTextNode( logs_list[key]['nice_name']); // Create a text node
+                        node.appendChild(textnode);
+                
+                        node.onclick = (event) => {
+                            document.getElementById('extension-privacy-manager-thing-options').style.display = 'none';
+                            this.thing_list_click(event.target);
+                        };
+                
+                        thing_list.appendChild(node);
+                    }
+                
+                
+                }
+                pre.innerText = "";
+            }
+            catch(e){
+                console.log("Privacy manager: error in create_sculptor_thing_list: ", e);
+            }
         }
 
 
@@ -499,19 +580,20 @@
                 var svg = d3.select("#extension-privacy-manager-thing-dataviz-svg"),
                     margin = {
                         top: 20,
-                        right: 20,
+                        right: 40,
                         bottom: 110,
                         left: 40
                     },
                     margin2 = {
                         top: 430,
-                        right: 20,
+                        right: 40,
                         bottom: 30,
                         left: 40
-                    },
-                    width = +svg.attr("width") - margin.left - margin.right,
-                    height = +svg.attr("height") - margin.top - margin.bottom,
-                    height2 = +svg.attr("height") - margin2.top - margin2.bottom;
+                    }
+                    //,
+                    //width = +svg.attr("width") - margin.left - margin.right,
+                    //height = +svg.attr("height") - margin.top - margin.bottom,
+                    //height2 = +svg.attr("height") - margin2.top - margin2.bottom;
 
 
                 svg.selectAll("*").remove();
@@ -529,21 +611,21 @@
                 var svg = d3.select("#extension-privacy-manager-thing-dataviz-svg");
 
                 //var width = +svg.attr("width")
-                var width = document.getElementById('extension-privacy-manager-thing-dataviz').offsetWidth;
+                var width = document.getElementById('extension-privacy-manager-thing-dataviz').offsetWidth - 10;
                 //console.log("offsetWidth = " + width);
                 document.getElementById('extension-privacy-manager-thing-dataviz-svg').style.width = width + "px";
                 //console.log();
 
                 var height = +svg.attr("height")
 
-                width = width - 50;
+                width = width - 60;
                 height = height - 50;
 
                 //var margin = {top: (0.1*width), right: (0.1*width), bottom: (0.1*width), left: (0.1*width)};
                 //var margin = {top: 0, right: (0.1*width), bottom: (0.1*width), left: (0.1*width)};
                 var margin = {
                     top: 10,
-                    right: 0,
+                    right: 10,
                     bottom: 0,
                     left: 50
                 };
@@ -560,8 +642,12 @@
                 var extra_high = d3.max(value_array) + 1;
 
                 // Check if the minimum and maximum date range has changed/expanded. This is used when deleting data.
-                var minimum_time = d3.min(date_array)
-                var maximum_time = d3.max(date_array)
+                var minimum_time = d3.min(date_array);
+                var maximum_time = d3.max(date_array);
+                
+                // not currently used, but could be useful?
+                //var minimum_value = d3.min(value_array); 
+                //var maximum_value = d3.max(value_array);
 
                 if (minimum_time < this.min_time) {
                     this.min_time = minimum_time;
@@ -675,6 +761,8 @@
                         //console.log( this.getAttribute("data-property-id") );
                         //console.log( this.getAttribute("data-data-type") );
 
+                        
+                        
                         document.getElementById('extension-privacy-manager-thing-options').style.display = 'block';
 
                         // reset all circle to blue
@@ -688,6 +776,8 @@
                         var select = new Date(Number(this.getAttribute("data-date")));
                         //console.log("selected point as date object = " + select);
 
+                        console.log("select date object: ", select, ", month: ", select.getMonth());
+
                         document.getElementById('extension-privacy-manager-input-change-value').value = this.getAttribute("data-value");
                         document.getElementById('extension-privacy-manager-input-change-property-id').value = this.getAttribute("data-property-id");
 
@@ -697,7 +787,7 @@
                         document.getElementById('extension-privacy-manager-input-day').value = select.getDate();
                         //console.log("select.getDate() = ", select.getDate() );
                         //console.log("select.getMonth() = ", select.getMonth() );
-                        document.getElementById('extension-privacy-manager-input-month').value = select.getMonth() + 1;
+                        document.getElementById('extension-privacy-manager-input-month').value = select.getMonth();
                         document.getElementById('extension-privacy-manager-input-year').value = select.getFullYear();
                         document.getElementById('extension-privacy-manager-input-millis').value = select.getMilliseconds();
                         
@@ -746,28 +836,41 @@
 
 
         thing_list_click(the_target) {
+            if(this.debug){
+                console.log("privacy manager debug: in thing_list_click. the_target: ", the_target);
+            }
+            
+            if(typeof the_target == 'undefined'){
+                console.error("thing_list_click: error, missing target");
+                return;
+            }
             const pre = document.getElementById('extension-privacy-manager-response-data');
-
+            const dataviz_el = document.getElementById('extension-privacy-manager-thing-dataviz');
+            
             // Update CSS
             var remove_click_css_list = document.querySelectorAll('#extension-privacy-manager-thing-list > *');
             for (var i = 0, max = remove_click_css_list.length; i < max; i++) {
-                this.removeClass(remove_click_css_list[i], "clicked");
+                this.removeClass(remove_click_css_list[i], "extension-privacy-manager-clicked");
             }
-            this.addClass(the_target, "clicked");
+            this.addClass(the_target, "extension-privacy-manager-clicked");
 
             var target_property_id = the_target.getAttribute('data-property-id');
             var target_data_type = the_target.getAttribute('data-data-type');
             //console.log(target_data_type);
             document.getElementById('extension-privacy-manager-input-change-data-type').value = target_data_type; // Make sure this is always populated with the correct data type. Bit of a clumsy use of hidden fields, should improve later.
             //console.log(target_thing_id);
-
+            
+            document.getElementById("extension-privacy-manager-thing-dataviz").scrollIntoView();
+            
             // Get data for selected thing
+            dataviz_el.style.opacity = .5;
             window.API.postJson(
                 `/extensions/${this.id}/api/get_property_data`, {
                     'property_id': target_property_id,
                     'data_type': target_data_type
                 }
             ).then((body) => {
+                dataviz_el.style.opacity = 1;
                 //console.log(body);
                 this.display_thing_data(target_property_id, target_data_type, body['data']);
                 
@@ -822,6 +925,10 @@
             const button_delete_point = document.getElementById('extension-privacy-manager-button-delete-point');
             const button_delete_before = document.getElementById('extension-privacy-manager-button-delete-before');
             const button_delete_after = document.getElementById('extension-privacy-manager-button-delete-after');
+            //const button_delete_and_below = document.getElementById('extension-privacy-manager-button-delete-and-below');
+            //const button_delete_and_above = document.getElementById('extension-privacy-manager-button-delete-and-above');
+            const button_delete_below = document.getElementById('extension-privacy-manager-button-delete-below');
+            const button_delete_above = document.getElementById('extension-privacy-manager-button-delete-above');
 
             const input_change_value = document.getElementById('extension-privacy-manager-input-change-value');
             const input_change_property_id = document.getElementById('extension-privacy-manager-input-change-property-id');
@@ -862,10 +969,8 @@
                 var active_tab = event.target.innerText.toLowerCase().replace(/\s/g , "-");
                 if(event.target.classList[0] == "extension-privacy-manager-main-tab-button"){
                     if(active_tab == "?"){active_tab = "help";}
-                    console.log("clicked on privay manager menu tab button: ", active_tab);
-                    
                     if(this.debug){
-                        console.log("clicked on privay manager menu tab button: ", active_tab);
+                        console.log("privacy manager debug: clicked on privay manager menu tab button: ", active_tab);
                     }
                     document.getElementById('extension-privacy-manager-content').className = 'extension-privacy-manager-active-tab-' + active_tab;
                 }
@@ -1098,13 +1203,44 @@
 
 
 
+            /*
+            // DELETE AND ALL BELOW
+            button_delete_and_below.addEventListener('click', () => {
+                //console.log("clicked delete after");
+                this.delete_handler("delete-and-below");
+            });
+            
+            // DELETE AND ALL ABOVE
+            button_delete_and_above.addEventListener('click', () => {
+                //console.log("clicked delete after");
+                this.delete_handler("delete-and-above");
+            });
+            */
+            
+            // DELETE BELOW
+            button_delete_below.addEventListener('click', () => {
+                //console.log("clicked delete after");
+                this.delete_handler("delete-below");
+            });
+            
+            // DELETE ABOVE
+            button_delete_above.addEventListener('click', () => {
+                //console.log("clicked delete after");
+                this.delete_handler("delete-above");
+            });
+            
+
+
             // Get initial data
             
             window.API.postJson(
                 `/extensions/${this.id}/api/init` //,{'init':1}
 
             ).then((body) => {
-                //console.log("Privacy manager init data: ", body);
+                if(this.debug){
+                    console.log("Privacy manager debug: init data: ", body);
+                }
+                
                 //thing_list.innerText = body['data'];
                 //this.create_sculptor_thing_list(body['logs']);
                 
@@ -1287,6 +1423,9 @@
 
 
         delete_handler(action) {
+            if(this.debug){
+                console.log("Deleting point(s). Action:", action);
+            }
             /*
 			console.log("Deleting point(s). Action:");
 			console.log(action);
@@ -1295,12 +1434,14 @@
 			console.log("min-time: " + this.min_time);
 			console.log("min-time: " + this.max_time);
 			*/
-            const pre = document.getElementById('extension-privacy-manager-response-data');
+            //const pre = document.getElementById('extension-privacy-manager-response-data');
             const options_pane = document.getElementById('extension-privacy-manager-thing-options');
             //const input_change_value = document.getElementById('extension-privacy-manager-input-change-value');
 
             var updating_data_type = document.getElementById('extension-privacy-manager-input-change-data-type').value;
             var updating_property_id = document.getElementById('extension-privacy-manager-input-change-property-id').value;
+
+            const value = document.getElementById('extension-privacy-manager-input-change-value').value;
 
             // In the future users could delete a selection
 
@@ -1315,13 +1456,15 @@
                 var start_date_stamp = selected_point_date
                 var end_date_stamp = this.max_time.getTime(); //.toUTCString();
             }
-            /*
-			console.log("____action = " + action);
-            console.log("property = " + updating_property_id);
-			console.log("of type = " + updating_data_type);
-            console.log("end_date_stamp = " + end_date_stamp);
-            console.log("start_date_stamp = " + start_date_stamp);
-    	    */
+            
+            if(this.debug){
+    			console.log("____action = " + action);
+                console.log("property = " + updating_property_id);
+    			console.log("of type = " + updating_data_type);
+                console.log("end_date_stamp = " + end_date_stamp);
+                console.log("start_date_stamp = " + start_date_stamp);
+                console.log("value = " + value);
+            }
             options_pane.style.opacity = .5;
 
 
@@ -1331,11 +1474,14 @@
                     'property_id': updating_property_id,
                     'data_type': updating_data_type,
                     'start_date': start_date_stamp,
-                    'end_date': end_date_stamp
+                    'end_date': end_date_stamp,
+                    'value': value
                 }
             ).then((body) => {
                 options_pane.style.opacity = 1;
-                //console.log(body['data']);
+                if(this.debug){
+                    console.log("Delete response: ", body['data']);
+                }
 
                 document.getElementById('extension-privacy-manager-input-change-old-epoch').value = "";
                 document.getElementById('extension-privacy-manager-input-change-value').value = "";
@@ -1345,7 +1491,12 @@
 
             }).catch((e) => {
                 console.log("Privacy manager: error in deletion handler: ", e);
-                pre.innerText = e.toString();
+                options_pane.style.opacity = 1;
+                document.getElementById('extension-privacy-manager-sculptor-delete-failed-message').style.display = 'block';
+                //pre.innerText = e.toString();
+                setTimeout(function(){
+                    document.getElementById('extension-privacy-manager-sculptor-delete-failed-message').style.display = 'none';
+                }, 4000);
             });
 
         } // End of button delete point add listener
@@ -1360,7 +1511,7 @@
 
         show_internal_logs(file_list) {
             if(this.debug){
-                console.log("in show_internal_logs. File list: ", file_list);
+                console.log("privacy manager debug: in show_internal_logs. File list: ", file_list);
             }
             try{
                 const pre = document.getElementById('extension-privacy-manager-response-data');

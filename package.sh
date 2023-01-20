@@ -27,16 +27,16 @@ mkdir -p lib package
 
 # Pull down Python dependencies
 #CFLAGS="--disable-jpeg" pip3 install Pillow -t lib --no-binary :all: --prefix ""
-python3 -m pip install --upgrade cairosvg --no-dependencies -t lib --no-cache-dir :all: --prefix ""
+python3 -m pip install --upgrade cairosvg --no-dependencies -t lib --no-binary :all: --prefix ""
 #python3 -m pip install --upgrade Pillow -t lib --no-binary :all: --prefix "" --global-option="build_ext" --global-option="--disable-jpeg" # Candle has pillow pre-installed
-python3 -m pip install --upgrade cairocffi -t lib --no-cache-dir :all: --prefix ""
-python3 -m pip install --upgrade flit -t lib --no-cache-dir :all: --prefix ""
-python3 -m pip install --upgrade cssselect2 -t lib --no-cache-dir :all: --prefix ""
-python3 -m pip install --upgrade defusedxml -t lib --no-cache-dir :all: --prefix ""
-python3 -m pip install --upgrade tinycss2 -t lib --no-cache-dir :all: --prefix ""
-python3 -m pip install --upgrade qrcode -t lib --no-cache-dir :all: --prefix ""
-python3 -m pip install --upgrade pygal -t lib --no-cache-dir :all: --prefix ""
-python3 -m pip install --upgrade ppa6 --no-dependencies -t lib --no-cache-dir :all: --prefix ""
+python3 -m pip install --upgrade cairocffi -t lib --no-binary :all: --prefix ""
+python3 -m pip install --upgrade flit -t lib --no-binary :all: --prefix ""
+python3 -m pip install --upgrade cssselect2 -t lib --no-binary :all: --prefix ""
+python3 -m pip install --upgrade defusedxml -t lib --no-binary :all: --prefix ""
+python3 -m pip install --upgrade tinycss2 -t lib --no-binary :all: --prefix ""
+python3 -m pip install --upgrade qrcode -t lib --no-binary :all: --prefix ""
+python3 -m pip install --upgrade pygal -t lib --no-binary :all: --prefix ""
+python3 -m pip install --upgrade ppa6 --no-dependencies -t lib --no-binary :all: --prefix ""
 #python3 -m pip install --upgrade matplotlib==3.0.2 -t lib --no-binary :all: --prefix ""
 
 #pip3 install -r requirements.txt -t lib --no-binary :all: --prefix ""

@@ -445,7 +445,7 @@ class PrivacyManagerAPIHandler(APIHandler):
                 print("warning, Privacy Manager API received a GET request")
                 return APIResponse(status=404)
             
-            if request.path == '/ajax' or request.path == '/get_property_data' or request.path == '/point_change_value' or request.path == '/point_delete' or request.path == '/internal_logs' or request.path == '/init' or request.path == '/sculptor_init' or request.path == '/printer_init' or request.path == '/printer_scan' or request.path == '/printer_set' or request.path == '/print_now' or request.path == '/print_test' or request.path == '/print_image':
+            if request.path == '/ajax' or request.path == '/get_property_data' or request.path == '/point_change_value' or request.path == '/point_delete' or request.path == '/internal_logs' or request.path == '/init' or request.path == '/sculptor_init' or request.path == '/printer_init' or request.path == '/printer_scan' or request.path == '/printer_set' or request.path == '/print_now' or request.path == '/print_test' or request.path == '/forget_printer' or request.path == '/print_image':
 
                 try:
                     if request.path == '/ajax':

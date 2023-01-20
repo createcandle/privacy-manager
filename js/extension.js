@@ -363,7 +363,9 @@
                                     found_write_property = true;
                                 }
                                 catch(e){
-                                    console.log("Error getting fresh property value: ", e);
+                                    if(this.debug){
+                                        console.log("Privacy manager: Error getting fresh privacy-related property value: ", e);
+                                    }
                                 }
                                 
                                 
@@ -1100,10 +1102,8 @@
             // Forget printer button
             document.getElementById('extension-privacy-manager-forget-printer-button').addEventListener('click', (target) => {
                 //console.log("printer forget button clicked");
+                document.getElementById('extension-privacy-manager-forget-printer-button').style.display = 'none';
                 
-                document.getElementById('extension-privacy-manager-printer-connected').innerText = '';
-                
-                document.getElementById('extension-privacy-manager-print-test-button').style.display = 'none';
                 
                 window.API.postJson(
                     `/extensions/${this.id}/api/forget_printer` //,{'printer_log':printer_log, 'printer_interval':printer_interval}
@@ -1111,8 +1111,14 @@
                     if(this.debug){
                         console.log("Privacy manager: forget printer response: ", body);
                     }
+                    
+                    document.getElementById('extension-privacy-manager-print-test-button').style.display = 'none';
+                    document.getElementById('extension-privacy-manager-printer-connected').innerText = "";
+                    document.getElementById('extension-privacy-manager-printer-list-name').innerText = "";
+                    document.getElementById('extension-privacy-manager-printer-list-mac').innerText = "";
                 }).catch((e) => {
                     console.log("Privacy manager: error in forget printer response: ", e);
+                    document.getElementById('extension-privacy-manager-forget-printer-button').style.display = 'block';
                 });
             });
             
@@ -1709,7 +1715,7 @@
                 
                 if(body['persistent']['printer_mac'] != ""){
                     document.getElementById('extension-privacy-manager-print-test-button').style.display = 'block';
-                    
+                    document.getElementById('extension-privacy-manager-forget-printer-button').style.display = 'block';
                     if(typeof body.printer_connected != 'undefined'){
                         this.show_printer_connection_state(body.printer_connected);
                     }

@@ -24,6 +24,7 @@ class PrivacyManagerAdapter(Adapter):
 
         self.api_handler = api_handler
         self.name = self.api_handler.addon_name #self.__class__.__name__
+        self.ready = False
         #print("adapter name = " + self.name)
         self.adapter_name = self.api_handler.addon_name #'PrivacyManager-adapter'
         Adapter.__init__(self, self.adapter_name, self.adapter_name, verbose=verbose)
@@ -36,12 +37,13 @@ class PrivacyManagerAdapter(Adapter):
             self.devices['privacy_manager'].connected = True
             self.devices['privacy_manager'].connected_notify(True)
             self.thing = self.get_device("privacy_manager")
-            
-            print("adapter: self.ready?: " + str(self.ready))
+            if self.DEBUG:
+                print("adapter: self.ready?: " + str(self.ready))
         
         except Exception as ex:
             print("Error during privacy manager adapter init: " + str(ex))
 
+        self.ready = True
 
     def remove_thing(self, device_id):
         if self.DEBUG:

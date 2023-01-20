@@ -353,14 +353,18 @@ class PrivacyManagerAPIHandler(APIHandler):
                             self.printer_disconnected_counter += 1
                             if self.printer_disconnected_counter > self.printer_disconnected_retry_delay:
                                 self.printer_disconnected_counter = 0
+                                if self.DEBUG:
+                                    print("Clock: will try to reconnected to printer. self.printer_disconnected_retry_delay: " + str(self.printer_disconnected_retry_delay))
                                 if self.print_test():
                                     if self.DEBUG:
                                         print("Clock: succesfully reconnected to printer")
-                                    else:
-                                        if self.printer_disconnected_retry_delay < 600:
-                                            self.printer_disconnected_retry_delay += 60
-                                        if self.DEBUG:
-                                            print("Clock: could not reconnect to printer")
+                                else:
+                                    if self.printer_disconnected_retry_delay < 360:
+                                        self.printer_disconnected_retry_delay += 60
+                                    elif self.printer_disconnected_retry_delay < 3600:
+                                        self.printer_disconnected_retry_delay += 180
+                                    if self.DEBUG:
+                                        print("Clock: could not reconnect to printer")
                             
                             
                         #if self.DEBUG:
@@ -631,6 +635,29 @@ class PrivacyManagerAPIHandler(APIHandler):
                               content_type='application/json',
                               content=json.dumps({'state': 'error', 'message':'Error while doing test print: ' + str(ex)}),
                             )
+                    
+                    
+                    elif request.path == '/forget_printer':
+                        try:
+                            if self.DEBUG:
+                                print("REQUEST TO FORGET PRINTER")
+                            
+                            self.persistent_data['printer_mac'] = ""
+                            self.save_persistent_data()
+                            
+                            return APIResponse(
+                              status=200,
+                              content_type='application/json',
+                              content=json.dumps({'state' : 'ok'}),
+                            )
+                        except Exception as ex:
+                            print("Error in /print_now: " + str(ex))
+                            return APIResponse(
+                              status=500,
+                              content_type='application/json',
+                              content=json.dumps({'state': 'error', 'message':'Error while trying to forget printer printer: ' + str(ex)}),
+                            )
+                    
                     
                     
                     elif request.path == '/print_image':
@@ -1871,6 +1898,8 @@ class PrivacyManagerAPIHandler(APIHandler):
                         self.power_timeout_set = True
                         try:
                             self.printer.setPowerTimeout(300) # minutes. Tells device to stay awake. 300 minutes = 5 hours
+                            if self.DEBUG:
+                                print("doing sudo bluetoothctl trust")
                             os.system('sudo bluetoothctl trust ' + str(self.persistent_data['printer_mac']))
                         except Exception as ex:
                             if self.DEBUG:

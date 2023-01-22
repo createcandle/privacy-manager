@@ -539,6 +539,7 @@
             try{
                 //console.log("in display_thing_data. property_id: " + property_id);
                 const dataviz = document.getElementById('extension-privacy-manager-thing-dataviz');
+                document.getElementById("extension-privacy-manager-sculptor-loading-data").style.display = 'none';
                 //console.log("dataviz:",dataviz);
                 //dataviz.innerHTML = "";
             
@@ -863,6 +864,8 @@
             //console.log(target_thing_id);
             
             document.getElementById("extension-privacy-manager-thing-dataviz").scrollIntoView();
+            //document.getElementById("extension-privacy-manager-thing-dataviz").innerHTML = '<div style="padding: 15rem 0; text-align:center"><div class="extension-privacy-manager-spinner"><div></div><div></div><div></div><div></div></div></div>';
+            document.getElementById("extension-privacy-manager-sculptor-loading-data").style.display = 'flex';
             
             // Get data for selected thing
             dataviz_el.style.opacity = .5;

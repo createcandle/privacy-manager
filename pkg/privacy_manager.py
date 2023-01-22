@@ -514,7 +514,8 @@ class PrivacyManagerAPIHandler(APIHandler):
                             return APIResponse(
                               status=500,
                               content_type='application/json',
-                              content=json.dumps({"state":"error","message":"Error while getting initialisation data: " + str(ex)}),
+                              content=json.dumps({"state":"error",
+                                                  "message":"Error while getting initialisation data: " + str(ex)}),
                             )
                             
                     
@@ -547,7 +548,8 @@ class PrivacyManagerAPIHandler(APIHandler):
                             return APIResponse(
                               status=500,
                               content_type='application/json',
-                              content=json.dumps({'state': 'error', 'message':'Error while performing bluetooth printer scan: ' + str(ex)}),
+                              content=json.dumps({'state': 'error', 
+                                                  'message':'Error while performing bluetooth printer scan: ' + str(ex)}),
                             )
                             
                     
@@ -606,7 +608,13 @@ class PrivacyManagerAPIHandler(APIHandler):
                             return APIResponse(
                               status=200,
                               content_type='application/json',
-                              content=json.dumps({'state' : 'ok', 'print_result': print_result, 'scanning': self.doing_bluetooth_scan, 'printer_mac': self.persistent_data['printer_mac'], 'printer_name':self.persistent_data['printer_name'], 'persistent': self.persistent_data}),
+                              content=json.dumps({'state' : 'ok', 
+                                                  'print_result': print_result, 
+                                                  'scanning': self.doing_bluetooth_scan, 
+                                                  'printer_mac': self.persistent_data['printer_mac'], 
+                                                  'printer_name':self.persistent_data['printer_name'], 
+                                                  'persistent': self.persistent_data
+                                              }),
                             )
                         except Exception as ex:
                             print("Error in /print_now: " + str(ex))
@@ -626,7 +634,11 @@ class PrivacyManagerAPIHandler(APIHandler):
                             return APIResponse(
                               status=200,
                               content_type='application/json',
-                              content=json.dumps({'state' : 'ok', 'printer_connected': printer_connected, 'scanning': self.doing_bluetooth_scan, 'persistent': self.persistent_data}),
+                              content=json.dumps({'state' : 'ok', 
+                                                  'printer_connected': printer_connected, 
+                                                  'scanning': self.doing_bluetooth_scan, 
+                                                  'persistent': self.persistent_data
+                                              }),
                             )
                         except Exception as ex:
                             print("Error in /print_now: " + str(ex))
@@ -643,6 +655,7 @@ class PrivacyManagerAPIHandler(APIHandler):
                                 print("REQUEST TO FORGET PRINTER")
                             
                             self.persistent_data['printer_mac'] = ""
+                            self.persistent_data['printer_name'] = ""
                             self.save_persistent_data()
                             
                             return APIResponse(
@@ -655,7 +668,8 @@ class PrivacyManagerAPIHandler(APIHandler):
                             return APIResponse(
                               status=500,
                               content_type='application/json',
-                              content=json.dumps({'state': 'error', 'message':'Error while trying to forget printer printer: ' + str(ex)}),
+                              content=json.dumps({'state': 'error', 
+                                                  'message':'Error while trying to forget printer printer: ' + str(ex)}),
                             )
                     
                     
@@ -690,7 +704,8 @@ class PrivacyManagerAPIHandler(APIHandler):
                             return APIResponse(
                               status=500,
                               content_type='application/json',
-                              content=json.dumps({'state': 'error', 'message':'Error while doing test print: ' + str(ex)}),
+                              content=json.dumps({'state': 'error', 
+                                                  'message':'Error while doing test print: ' + str(ex)}),
                             )
                     
                     
@@ -721,7 +736,8 @@ class PrivacyManagerAPIHandler(APIHandler):
                                 return APIResponse(
                                   status=200,
                                   content_type='application/json',
-                                  content=json.dumps({'state' : 'ok', 'data' : []}),
+                                  content=json.dumps({'state' : 'ok', 
+                                                      'data' : []}),
                                 )
                             
                                     

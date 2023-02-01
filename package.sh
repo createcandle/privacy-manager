@@ -27,7 +27,7 @@ mkdir -p lib package
 
 # Pull down Python dependencies
 #CFLAGS="--disable-jpeg" pip3 install Pillow -t lib --no-binary :all: --prefix ""
-python3 -m pip install --upgrade requsts --no-dependencies -t lib --no-binary :all: --prefix ""
+python3 -m pip install --upgrade requests --no-dependencies -t lib --no-binary :all: --prefix ""
 python3 -m pip install --upgrade cairosvg --no-dependencies -t lib --no-binary :all: --prefix ""
 #python3 -m pip install --upgrade Pillow -t lib --no-binary :all: --prefix "" --global-option="build_ext" --global-option="--disable-jpeg" # Candle has pillow pre-installed
 python3 -m pip install --upgrade cairocffi -t lib --no-binary :all: --prefix ""

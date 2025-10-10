@@ -87,7 +87,7 @@ class PrivacyManagerDevice(Device):
 
         self.name = device_name
         self.title = device_title
-        self.description = 'Control devices via via the internet'
+        self.description = 'Manage your privacy'
 
         #if self.adapter.DEBUG:
         #print("Empty PrivacyManager thing has been created. device_name = " + str(self.name))

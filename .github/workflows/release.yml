@@ -7,7 +7,7 @@ on:
 
 jobs:
   get-release:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Get Release
       id: get_release
@@ -25,7 +25,7 @@ jobs:
   build_job:
     needs: get-release
     # The host should always be linux
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     name: Build on ${{ matrix.distro }} ${{ matrix.arch }}
     
     # Run steps on a matrix of arch/distro combinations

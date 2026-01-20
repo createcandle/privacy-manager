@@ -20,6 +20,13 @@ else
   TARFILE_SUFFIX="-${ADDON_ARCH}-v${PYTHON_VERSION}"
 fi
 
+echo "__whoami__"
+whoami
+echo
+
+apt install libffi-dev -y
+
+
 
 # Prep new package
 echo "creating package"

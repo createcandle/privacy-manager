@@ -26,7 +26,13 @@ echo "__whoami__"
 whoami
 echo
 
-apt install libffi-dev -y
+if [ "$EUID" -ne 0 ]; then
+  sudo apt install libffi-dev -y
+else
+  apt install libffi-dev -y
+fi
+
+
 
 
 

@@ -1,5 +1,4 @@
 name: Release
-#ubuntu-22.04-arm
 
 on:
   release:
@@ -7,7 +6,7 @@ on:
 
 jobs:
   get-release:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04-arm
     steps:
     - name: Get Release
       id: get_release
@@ -22,32 +21,129 @@ jobs:
         name: upload_url
         path: upload_url
 
-  build_job:
+  build:
+    needs: get-release
+    strategy:
+      matrix:
+        platform: [
+          'linux-arm64',
+#          'linux-x64',
+        ]
+        pair: [
+#          'python:3.7',
+          'python:3.9',
+          'python:3.11',
+          'python:3.13',
+        ]
+        include:
+#          - platform: 'linux-arm'
+#            host-os: 'ubuntu-latest'
+          - platform: 'linux-arm64'
+            host-os: 'ubuntu-24.04-arm'
+#          - platform: 'linux-x64'
+#            host-os: 'ubuntu-latest'
+#          - pair: 'python:3.7'
+#            language: 'python'
+#            version: '3.7'
+          - pair: 'python:3.9'
+            language: 'python'
+            version: '3.9'
+          - pair: 'python:3.11'
+            language: 'python'
+            version: '3.11'
+          - pair: 'python:3.13'
+            language: 'python'
+            version: '3.13'
+
+    runs-on: ${{ matrix.host-os }}
+
+    steps:
+    - name: Download upload_url
+      uses: actions/download-artifact@v4
+      with:
+        name: upload_url
+        path: upload_url
+    - name: Set upload_url
+      run: echo "UPLOAD_URL=$(cat upload_url/upload_url)" >> $GITHUB_ENV
+    - name: Set release version
+      run: echo "RELEASE_VERSION=${GITHUB_REF:10}" >> $GITHUB_ENV
+    - uses: actions/checkout@v3
+    - name: Use Python ${{ matrix.version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.version }}
+#    - name: Make build script executable
+#      run: chmod +x ./build.sh
+    - name: Make packaging script executable
+      run: |
+        chmod +x ./package.sh
+    - name: Build addon
+      run: |
+        ./package.sh "${{ matrix.platform }}" "${{ matrix.language }}" "${{ matrix.version }}"
+      shell: bash
+    - name: Upload Release Asset tgz
+      uses: shogo82148/actions-upload-release-asset@v1
+      with:
+        #upload_url: ${{ github.event.release.upload_url }}
+        upload_url: ${{ env.UPLOAD_URL }}
+        asset_path: privacy-manager-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}-v${{ matrix.version }}.tgz
+        overwrite: true
+      
+    - name: Upload Release Asset shasum
+      uses: shogo82148/actions-upload-release-asset@v1
+      with:
+        #upload_url: ${{ github.event.release.upload_url }}
+        upload_url: ${{ env.UPLOAD_URL }}
+        asset_path: privacy-manager-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}-v${{ matrix.version }}.tgz.sha256sum
+        overwrite: true
+
+
+#
+#  ATTEMPT TO ALSO BUILD 32 BIT VERSION
+#
+  
+  get-release_old:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Get Release
+      id: get_release
+      uses: bruceadams/get-release@v1.3.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Dump upload url to file
+      run: echo '${{ steps.get_release.outputs.upload_url }}' > upload_url_old
+    - name: Upload upload_url_old
+      uses: actions/upload-artifact@v4
+      with:
+        name: upload_url_old
+        path: upload_url_old
+
+  build_job_old:
     needs: get-release
     # The host should always be linux
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     name: Build on ${{ matrix.distro }} ${{ matrix.arch }}
     
     # Run steps on a matrix of arch/distro combinations
     strategy:
       matrix:
-        arch: [aarch64,armv7]
-        version: ['3.11','3.13']
+        arch: [armv7]
+        version: ['3.11']
         include:
         - distro: bookworm
-        - arch: aarch64
-          platform: linux-arm64
         - arch: armv7
           platform: linux-arm
 
     steps:
-      - name: Download upload_url
+      - name: Download upload_url_old
         uses: actions/download-artifact@v4
         with:
-          name: upload_url
-          path: upload_url
+          name: upload_url_old
+          path: upload_url_old
+      - name: Display upload_url folder contents
+        run: ls -lah upload_url_old
       - name: Set upload_url
-        run: echo "UPLOAD_URL=$(cat upload_url/upload_url)" >> $GITHUB_ENV
+        run: echo "UPLOAD_URL_OLD=$(cat upload_url_old/upload_url_old)" >> $GITHUB_ENV
       - name: Set release version
         run: echo "RELEASE_VERSION=${GITHUB_REF:10}" >> $GITHUB_ENV
       - uses: actions/checkout@v4
@@ -56,7 +152,7 @@ jobs:
       #- name: Make packaging script executable
       #  run: |
       #    chmod +x ./package.sh
-      - uses: uraimo/run-on-arch-action@v3.0.1
+      - uses: uraimo/run-on-arch-action@v3
         name: Build artifact
         id: build_it
         with:
@@ -65,7 +161,7 @@ jobs:
           #version: ${{ matrix.version }}
 
           # Not required, but speeds up builds
-          githubToken: ${{ github.token }}
+          # githubToken: ${{ github.token }}
 
           # Create a build directory
           setup: |
@@ -84,7 +180,7 @@ jobs:
           env: | # YAML, but pipe character is necessary
             artifact_name: git-${{ matrix.distro }}_${{ matrix.arch }}
 
-          # The shell to run commands with in the container
+          # The shell to run commands within the container
           shell: /bin/bash
 
           # Install some dependencies in the container. This speeds up builds if
@@ -96,8 +192,6 @@ jobs:
           install: |
             case "${{ matrix.distro }}" in
               ubuntu*|jessie|stretch|buster|bullseye|bookworm|trixie)
-                echo "___ matrix.distro? {{ matrix.distro }} ___"
-                echo "___ matrix.version? {{ matrix.version }} ___"
                 apt-get update -q -y
                 apt-get install -q -y git 
                 apt-get install -q -y "python${{ matrix.version }}" python3-pip
@@ -137,7 +231,7 @@ jobs:
               chmod +x package.sh
               export PYTHON_VERSION="${{ matrix.version }}"
               echo "PYTHON_VERSION: $PYTHON_VERSION"
-              ADDON_ARCH="${{ matrix.platform }}" ./package.sh
+              ADDON_ARCH="${{ matrix.platform }}" ./package.sh "${{ matrix.platform }}" "${{ matrix.language }}" "${{ matrix.version }}"
               ls -lh
               cp privacy-manager* ..
 
@@ -157,7 +251,7 @@ jobs:
         uses: shogo82148/actions-upload-release-asset@v1
         with:
               #upload_url: ${{ github.event.release.upload_url }}
-              upload_url: ${{ env.UPLOAD_URL }}
+              upload_url: ${{ env.UPLOAD_URL_OLD }}
               asset_path: privacy-manager-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}-v${{ matrix.version }}.tgz
               overwrite: true
       
@@ -165,6 +259,6 @@ jobs:
         uses: shogo82148/actions-upload-release-asset@v1
         with:
             #upload_url: ${{ github.event.release.upload_url }}
-            upload_url: ${{ env.UPLOAD_URL }}
+            upload_url: ${{ env.UPLOAD_URL_OLD }}
             asset_path: privacy-manager-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}-v${{ matrix.version }}.tgz.sha256sum 
             overwrite: true

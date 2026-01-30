@@ -4,6 +4,10 @@
 
 echo "in package.sh"
 
+ADDON_ARCH="$1"
+#LANGUAGE_NAME="$2"
+#PYTHON_VERSION="$3"
+
 export PYTHONIOENCODING=utf8
 
 version=$(grep '"version"' manifest.json | cut -d: -f2 | cut -d\" -f2)
@@ -17,6 +21,7 @@ rm -rf *.tgz *.sha256sum package SHA256SUMS lib
 
 if [ -z "${ADDON_ARCH}" ]; then
   TARFILE_SUFFIX=
+  exit 1
 else
   PYTHON_VERSION="$(python3 --version 2>&1 | cut -d' ' -f2 | cut -d. -f 1-2)"
   TARFILE_SUFFIX="-${ADDON_ARCH}-v${PYTHON_VERSION}"

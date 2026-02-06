@@ -57,7 +57,7 @@
 
 #extension-privacy-manager-view #extension-privacy-manager-tab-buttons-container button{
 	font-size: 1.8rem;
-	padding: 1rem 2rem;
+	padding: 1rem 1.4rem;
 	border: none;
     border-radius:0;
     color:inherit;
@@ -105,6 +105,9 @@
     margin-top: 1rem;
     font-size:1.8rem;
     font-weight: normal;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .zoom {
@@ -482,6 +485,13 @@
 	padding-left: 0;
 }
 
+#extension-privacy-manager-thing-list:empty::after{
+	content:'There are no logs to sculpt';
+	padding:2rem;
+    display: block;
+    text-align: center;
+}
+
 #extension-privacy-manager-thing-list li{
 	background-color:rgba(0,0,0,.1);
 	border-right:1rem solid transparent;
@@ -815,6 +825,10 @@ INTERNAL LOGS
     #extension-privacy-manager-tab-sculptor{
         padding-bottom:50vh;
     }
+	
+	#extension-privacy-manager-content-container #extension-privacy-manager-title{
+		min-height:5.5rem;
+	}
 }
 
 

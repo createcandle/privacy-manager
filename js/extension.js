@@ -974,6 +974,7 @@
                 var active_tab = event.target.innerText.toLowerCase().replace(/\s/g , "-");
                 if(event.target.classList[0] == "extension-privacy-manager-main-tab-button"){
                     if(active_tab == "?"){active_tab = "help";}
+					if(active_tab == "sculpt"){active_tab = "sculptor";}
                     if(this.debug){
                         console.log("privacy manager debug: clicked on privay manager menu tab button: ", active_tab);
                     }

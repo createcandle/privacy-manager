@@ -1346,9 +1346,10 @@
                     this.view.innerHTML = "";
                 }
 			}
-            catch(e){
-                console.log("Privacy manager addon: error in hide(): ", e);
+            catch(err){
+                console.log("Privacy manager addon: error in hide: ", err);
             }
+			
             
 		}
 

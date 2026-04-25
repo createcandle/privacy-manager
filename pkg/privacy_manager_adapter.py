@@ -80,12 +80,14 @@ class PrivacyManagerDevice(Device):
         
         self._id = device_name
         self.id = device_name
+        self.name = device_name
+        
         self.adapter = adapter
         self.api_handler = self.adapter.api_handler
         self._type.append(device_type)
         #self._type = ['OnOffSwitch']
 
-        self.name = device_name
+        
         self.title = device_title
         self.description = 'Manage your privacy'
 
